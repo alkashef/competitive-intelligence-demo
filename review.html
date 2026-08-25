@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Competitive Intelligence Dashboard</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: Arial, sans-serif; margin: 0; padding: 28px; line-height: 1.45; color: #222; }
+  header { border-bottom: 2px solid #222; margin-bottom: 22px; padding-bottom: 12px; }
+  h1 { margin: 0 0 5px; font-size: 26px; }
+  h2 { margin-top: 30px; border-bottom: 1px solid #bbb; padding-bottom: 5px; font-size: 19px; }
+  h3 { font-size: 15px; margin: 12px 0 6px; }
+  p { margin: 6px 0; }
+  .meta { font-size: 12px; color: #666; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+  .card { border: 1px solid #ccc; border-radius: 6px; padding: 12px; }
+  .headline { font-size: 18px; font-weight: 700; margin-bottom: 12px; }
+  .badge { display: inline-block; border: 1px solid #999; border-radius: 999px; padding: 2px 8px; font-size: 11px; margin-right: 5px; }
+  .status-sufficient { border-color: #287a3d; color: #287a3d; }
+  .status-thin { border-color: #a33; color: #a33; }
+  table { width: 100%; border-collapse: collapse; margin: 10px 0 18px; font-size: 12px; }
+  th, td { border: 1px solid #d7d7d7; padding: 7px 8px; text-align: left; vertical-align: top; }
+  th { background: #f2f2f2; }
+  ul { margin: 6px 0; padding-left: 20px; }
+  .small { font-size: 11px; color: #666; }
+  .priority { font-weight: 700; }
+  .evidence-id { font-family: monospace; font-size: 11px; }
+  .empty { color: #999; font-style: italic; }
+  .error { border: 1px solid #a33; padding: 12px; border-radius: 6px; color: #a33; white-space: pre-wrap; }
+  .scroll { overflow-x: auto; }
+  @media print { body { padding: 12mm; } .card { break-inside: avoid; } }
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<!-- n8n replaces the data token in the application/json script below with JSON.stringify(researchData).
+     Escape '<' as \\u003c before replacement so model/web text cannot terminate this script tag. -->
+<script id="dashboard-data" type="application/json">{"meta":{"schema_version":"1.0","run_date":"2026-08-25","product":"Qwen3.5-35B-A3B","provider":"Alibaba / Qwen","perspective":"product_owner","research_window":"Current public evidence through 2026-08-25; material-change lookback from 2026-05-27 through 2026-08-25.","previous_run_available":false},"coverage":{"overall":"sufficient","topics":[{"topic":"product_snapshot","status":"found","notes":"Official model card and release records provide architecture, parameter, context, modality, license, and release details."},{"topic":"benchmarks","status":"found","notes":"Independent Artificial Analysis results cover all five models. Vendor comparisons are available for selected benchmark pairs, but many cross-vendor results remain setting-dependent."},{"topic":"deployment_efficiency","status":"found","notes":"Parameters, context, quantization, and runtime support are documented. Memory figures other than gpt-oss-120b are derived planning estimates and explicitly state their assumptions."},{"topic":"capabilities","status":"found","notes":"Official cards document reasoning, multimodality, coding, tools, agents, and language support; structured-output evidence is thinner for DeepSeek-V3.2 and GLM-5.2."},{"topic":"competitors","status":"found","notes":"All four requested competitors are represented."},{"topic":"ecosystem_adoption","status":"found","notes":"Hugging Face monthly downloads, quantization counts where exposed, runtime support, and Spaces usage were captured on 2026-08-25."},{"topic":"changes","status":"partial","notes":"This is the baseline run, so historical dashboard-to-dashboard change cannot be computed. Recent releases and successor-model status changes are recorded."}]},"executive_position":{"headline":"Qwen3.5-35B-A3B is the deployment-density and multimodal-local leader in this set, but GLM-5.2 now holds a large raw-capability and long-horizon-agent advantage.","overall_position":"mixed","strongest_competitor":{"name":"GLM-5.2","why":"GLM-5.2 scores 53 versus Qwen3.5-35B-A3B's estimated 30 on the current Artificial Analysis Intelligence Index, combines a 1M-token context with strong coding and agent results, and has rapidly accumulated adoption. Its main weakness is a roughly 744B-total/40B-active footprint that is far less practical for local deployment.","evidence_ids":["E011","E012","E013","E021","E023"]},"top_strengths":[{"text":"Qwen has the smallest total and active parameter footprint in the comparison at 35B total and 3B active, creating a decisive advantage for workstation, single-node, and constrained air-gapped deployment.","evidence_ids":["E001","E005","E009","E012","E015"]},{"text":"Qwen combines local efficiency with native vision and video handling, a 262,144-token native context, extensibility to about 1.01M tokens, and claimed coverage of 201 languages and dialects.","evidence_ids":["E001"]},{"text":"Independent evaluation places Qwen's reasoning mode above Mistral Small 4 and gpt-oss-120b, and close to DeepSeek-V3.2, despite Qwen using a much smaller resident and active model footprint.","evidence_ids":["E018","E019","E020","E022"]},{"text":"Qwen has the broadest visible quantization ecosystem among the requested repositories, with 280 Hugging Face quantizations and support across Transformers, vLLM, SGLang, KTransformers, llama.cpp-compatible applications, Ollama, and LM Studio.","evidence_ids":["E003"]}],"top_weaknesses":[{"text":"GLM-5.2 has opened a large independent intelligence gap and is particularly threatening in long-horizon coding, terminal work, and agentic tasks.","evidence_ids":["E011","E021","E023"]},{"text":"Qwen trails gpt-oss-120b on Qwen's own published LiveCodeBench v6 comparison, 74.6 versus 82.7, indicating a competitive-programming weakness even though Qwen leads on SWE-bench Verified in the same table.","evidence_ids":["E002"]},{"text":"Artificial Analysis now marks Qwen3.5-35B-A3B as deprecated in favor of Qwen3.6-35B-A3B, creating a lifecycle and positioning disadvantage for the exact product evaluated here.","evidence_ids":["E024"]},{"text":"Independent measurements characterize Qwen3.5-35B-A3B as highly verbose, which can erode latency, energy, and throughput advantages unless reasoning budgets and output controls are carefully managed.","evidence_ids":["E029"]}],"biggest_threat":{"text":"GLM-5.2 could reset buyer expectations for open-weight coding and autonomous agents: it offers frontier-class independent scores, a native 1M-token context, permissive licensing, and fast ecosystem growth. Qwen should avoid competing with it solely on peak benchmark quality and instead defend deployment density while closing the agentic-coding gap.","evidence_ids":["E011","E012","E013","E021","E023"]}},"changes":{"status":"baseline","new":[{"entity":"GLM-5.2","change":"Released as an MIT-licensed open-weight model with a 1M-token context and immediately became the leading open-weight model in the current Artificial Analysis Intelligence Index.","date":"2026-06-16","evidence_ids":["E014","E021","E023"]},{"entity":"Qwen-AgentWorld-35B-A3B","change":"Qwen published an agent-specialized derivative at the same 35B-A3B scale; the official report says its three-stage training pipeline improved the aggregate agent score by 8.66 points over Qwen3.5-35B-A3B.","date":"2026-06-23","evidence_ids":["E026"]}],"changed":[{"entity":"Qwen3.5-35B-A3B","change":"Artificial Analysis now treats the model as deprecated and recommends the newer Qwen3.6-35B-A3B.","date":null,"evidence_ids":["E024"]},{"entity":"DeepSeek-V3.2","change":"Artificial Analysis now treats DeepSeek-V3.2 as deprecated following the release of DeepSeek V4 Pro.","date":null,"evidence_ids":["E025"]}],"removed":[]},"product_snapshot":{"architecture":"Hybrid Gated DeltaNet/full-attention causal language model with a sparse 256-expert MoE and a vision encoder; 8 routed experts plus 1 shared expert are active per MoE layer.","total_parameters_b":35,"active_parameters_b":3,"context_window_tokens":262144,"license":"Apache-2.0","modalities":["text_input","image_input","video_input","text_output"],"release_date":"2026-02-24","official_model_url":"https://huggingface.co/Qwen/Qwen3.5-35B-A3B","evidence_ids":["E001","E004"]},"benchmark_scorecard":[{"benchmark":"Artificial Analysis Intelligence Index v4.1.1","category":"other","higher_is_better":true,"scores":[{"model":"Qwen3.5-35B-A3B","score":30,"unit":"index_points","variant":"reasoning; estimated by evaluator","source_type":"independent","evidence_id":"E018"},{"model":"Mistral Small 4","score":20,"unit":"index_points","variant":"reasoning","source_type":"independent","evidence_id":"E019"},{"model":"DeepSeek-V3.2","score":33,"unit":"index_points","variant":"reasoning; estimated by evaluator","source_type":"independent","evidence_id":"E020"},{"model":"GLM-5.2","score":53,"unit":"index_points","variant":"max reasoning","source_type":"independent","evidence_id":"E021"},{"model":"gpt-oss-120b","score":24,"unit":"index_points","variant":"high reasoning","source_type":"independent","evidence_id":"E022"}],"comparability":"limited","notes":"All scores use the current Artificial Analysis index family, but Qwen and DeepSeek are marked estimated by the evaluator and the selected reasoning-effort modes differ."},{"benchmark":"MMLU-Pro","category":"knowledge","higher_is_better":true,"scores":[{"model":"Qwen3.5-35B-A3B","score":85.3,"unit":"percent","variant":"official Qwen evaluation","source_type":"vendor","evidence_id":"E002"},{"model":"gpt-oss-120b","score":80.8,"unit":"percent","variant":"evaluated by Qwen","source_type":"vendor","evidence_id":"E002"}],"comparability":"direct","notes":"Both results were published in the same Qwen model-card table and evaluation context."},{"benchmark":"IFEval","category":"instruction_following","higher_is_better":true,"scores":[{"model":"Qwen3.5-35B-A3B","score":91.9,"unit":"percent","variant":"official Qwen evaluation","source_type":"vendor","evidence_id":"E002"},{"model":"gpt-oss-120b","score":88.9,"unit":"percent","variant":"evaluated by Qwen","source_type":"vendor","evidence_id":"E002"}],"comparability":"direct","notes":"Same vendor table and evaluation context."},{"benchmark":"AA-LCR","category":"long_context","higher_is_better":true,"scores":[{"model":"Qwen3.5-35B-A3B","score":58.5,"unit":"percent","variant":"official Qwen evaluation","source_type":"vendor","evidence_id":"E002"},{"model":"gpt-oss-120b","score":50.7,"unit":"percent","variant":"evaluated by Qwen","source_type":"vendor","evidence_id":"E002"}],"comparability":"direct","notes":"Same vendor table and evaluation context."},{"benchmark":"AA-LCR","category":"long_context","higher_is_better":true,"scores":[{"model":"Mistral Small 4","score":72,"unit":"percent","variant":"reasoning mode; Mistral publication reports 0.72","source_type":"vendor","evidence_id":"E005"}],"comparability":"not_comparable","notes":"Mistral's publication does not establish identical settings with the Qwen table, so this score is not used as a direct win over Qwen."},{"benchmark":"GPQA Diamond","category":"reasoning","higher_is_better":true,"scores":[{"model":"Qwen3.5-35B-A3B","score":84.2,"unit":"percent","variant":"official Qwen evaluation","source_type":"vendor","evidence_id":"E002"},{"model":"gpt-oss-120b","score":80.1,"unit":"percent","variant":"evaluated by Qwen","source_type":"vendor","evidence_id":"E002"},{"model":"GLM-5.2","score":91.2,"unit":"percent","variant":"max reasoning; official GLM evaluation","source_type":"vendor","evidence_id":"E011"}],"comparability":"not_comparable","notes":"Qwen and gpt-oss are directly comparable within the Qwen table. GLM was evaluated in a separate vendor publication with potentially different settings."},{"benchmark":"LiveCodeBench v6","category":"coding","higher_is_better":true,"scores":[{"model":"Qwen3.5-35B-A3B","score":74.6,"unit":"percent","variant":"official Qwen evaluation","source_type":"vendor","evidence_id":"E002"},{"model":"gpt-oss-120b","score":82.7,"unit":"percent","variant":"evaluated by Qwen","source_type":"vendor","evidence_id":"E002"}],"comparability":"direct","notes":"This is a clear gpt-oss-120b win within Qwen's own evaluation table."},{"benchmark":"SWE-bench Verified","category":"coding","higher_is_better":true,"scores":[{"model":"Qwen3.5-35B-A3B","score":69.2,"unit":"percent_resolved","variant":"official Qwen evaluation","source_type":"vendor","evidence_id":"E002"},{"model":"gpt-oss-120b","score":62,"unit":"percent_resolved","variant":"evaluated by Qwen","source_type":"vendor","evidence_id":"E002"}],"comparability":"direct","notes":"This is a Qwen win within the same vendor-published table; agent harness details should still be considered."},{"benchmark":"Humanity's Last Exam","category":"reasoning","higher_is_better":true,"scores":[{"model":"GLM-5.2","score":40.5,"unit":"percent","variant":"official no-tools evaluation","source_type":"vendor","evidence_id":"E011"},{"model":"GLM-5.2","score":40,"unit":"percent_approximate","variant":"Artificial Analysis independent evaluation","source_type":"independent","evidence_id":"E023"}],"comparability":"limited","notes":"The independent result approximately corroborates the vendor no-tools result, but it is reported as a rounded value."},{"benchmark":"Terminal-Bench 2.1","category":"agent_tool_use","higher_is_better":true,"scores":[{"model":"GLM-5.2","score":81,"unit":"percent","variant":"Terminus-2 harness","source_type":"vendor","evidence_id":"E011"},{"model":"GLM-5.2","score":82.7,"unit":"percent","variant":"best reported Claude Code harness; five-run average","source_type":"vendor","evidence_id":"E011"}],"comparability":"not_comparable","notes":"The two scores use different agent harnesses and should not be silently merged."}],"deployment_efficiency":{"models":[{"model":"Qwen3.5-35B-A3B","total_parameters_b":35,"active_parameters_b":3,"minimum_memory_gb":24,"recommended_memory_gb":32,"memory_notes":"Planning estimate for a community Q4 GGUF at short-to-moderate context: approximately 20 GB of model artifacts plus runtime and KV-cache headroom. BF16 weights require roughly 72 GB before runtime overhead. Native 262k or extended 1M context can require substantially more memory.","quantization_options":["BF16","official FP8 checkpoint","community GGUF Q2-Q8","community GPTQ-INT4","community MXFP4/NVFP4"],"supported_runtimes":["Transformers","vLLM","SGLang","KTransformers","llama.cpp","Ollama","LM Studio","Docker Model Runner"],"air_gap_ready":"yes","air_gap_notes":"Weights and open runtimes can run without external calls after the model, tokenizer, vision processor, runtime packages, and any required CUDA or accelerator dependencies are staged locally.","evidence_ids":["E001","E003","E027"]},{"model":"Mistral Small 4","total_parameters_b":119,"active_parameters_b":6.5,"minimum_memory_gb":80,"recommended_memory_gb":96,"memory_notes":"Derived planning estimate using the official NVFP4 checkpoint: raw 4-bit weights are approximately 59.5 GB before metadata, non-quantized tensors, vision components, runtime workspace, and KV cache. BF16 is approximately 238 GB before overhead. Long-context deployment requires additional memory.","quantization_options":["BF16","FP8","official NVFP4","community GGUF","community MLX 4-bit"],"supported_runtimes":["vLLM","llama.cpp","LM Studio","SGLang","Transformers"],"air_gap_ready":"yes","air_gap_notes":"The model can run fully offline after weights, mistral_common, tokenizer and image-processing assets, runtime packages, and accelerator dependencies are locally staged.","evidence_ids":["E005","E006"]},{"model":"DeepSeek-V3.2","total_parameters_b":685,"active_parameters_b":37,"minimum_memory_gb":384,"recommended_memory_gb":512,"memory_notes":"Derived lower-bound planning estimate assumes a community 4-bit checkpoint: 685B parameters at four bits is approximately 342.5 GB before scales, metadata, runtime workspace, and KV cache. Official FP8 weights are approximately 685 GB before overhead. Multi-GPU or large unified-memory deployment is required.","quantization_options":["BF16","FP8","community low-bit GGUF and runtime-specific quantizations"],"supported_runtimes":["Transformers","vLLM","SGLang","llama.cpp","Ollama","LM Studio","Docker Model Runner"],"air_gap_ready":"yes","air_gap_notes":"No external service is intrinsic to inference. A large multi-accelerator runtime, tool parser configuration, and all artifacts must be staged inside the air-gapped environment.","evidence_ids":["E008","E009","E020"]},{"model":"GLM-5.2","total_parameters_b":744,"active_parameters_b":40,"minimum_memory_gb":400,"recommended_memory_gb":512,"memory_notes":"Derived lower-bound estimate assumes an official NVFP4 or MXFP4 checkpoint: 744B parameters at four bits is approximately 372 GB before metadata, higher-precision tensors, runtime workspace, and KV cache. Official FP8 is roughly 704 GB. Serving the full 1M context materially increases memory requirements and normally requires distributed accelerators.","quantization_options":["BF16","official FP8","official NVIDIA NVFP4","official AMD MXFP4","community GGUF and MLX"],"supported_runtimes":["SGLang","vLLM","Transformers","KTransformers","Unsloth","vLLM-Ascend","xLLM","llama.cpp-compatible community builds"],"air_gap_ready":"yes","air_gap_notes":"Inference can be isolated after the very large model artifacts, runtime containers, parser code, and accelerator libraries are staged. Operational complexity and cluster size are significant but do not require network calls.","evidence_ids":["E011","E012","E028"]},{"model":"gpt-oss-120b","total_parameters_b":117,"active_parameters_b":5.1,"minimum_memory_gb":80,"recommended_memory_gb":96,"memory_notes":"OpenAI explicitly states that the native MXFP4 model fits within 80 GB of memory. The recommendation adds runtime and KV-cache headroom; larger contexts and concurrency may need more.","quantization_options":["native MXFP4","BF16 original weights","community GGUF and runtime-specific quantizations"],"supported_runtimes":["Transformers","vLLM","SGLang","PyTorch/Triton","Ollama","llama.cpp","LM Studio","Apple Metal","Docker Model Runner"],"air_gap_ready":"yes","air_gap_notes":"OpenAI states that self-hosted data is not received or processed by OpenAI unless explicitly shared. The weights, Harmony renderer, runtime packages, and dependencies must be locally staged.","evidence_ids":["E015","E016","E017"]}]},"capability_matrix":[{"capability":"conversation","models":[{"model":"Qwen3.5-35B-A3B","status":"yes","notes":"Post-trained conversational model with thinking and non-thinking response modes.","evidence_ids":["E001"]},{"model":"Mistral Small 4","status":"yes","notes":"Designed for general chat assistants with configurable reasoning.","evidence_ids":["E005"]},{"model":"DeepSeek-V3.2","status":"yes","notes":"Conversational post-trained model supporting thinking and non-thinking operation.","evidence_ids":["E008","E010"]},{"model":"GLM-5.2","status":"yes","notes":"Conversational model with flexible reasoning effort.","evidence_ids":["E011"]},{"model":"gpt-oss-120b","status":"yes","notes":"Post-trained general-purpose reasoning and conversational model.","evidence_ids":["E015"]}]},{"capability":"reasoning","models":[{"model":"Qwen3.5-35B-A3B","status":"yes","notes":"Supports default thinking and configurable non-thinking inference; independent index score is estimated at 30.","evidence_ids":["E001","E018"]},{"model":"Mistral Small 4","status":"yes","notes":"Per-request reasoning effort can be set to none or high.","evidence_ids":["E005","E019"]},{"model":"DeepSeek-V3.2","status":"yes","notes":"Reasoning-focused post-training with thinking integrated into tool use.","evidence_ids":["E008","E010","E020"]},{"model":"GLM-5.2","status":"yes","notes":"Strongest independent reasoning result in the requested set.","evidence_ids":["E011","E021"]},{"model":"gpt-oss-120b","status":"yes","notes":"Supports low, medium, and high reasoning effort and exposes chain of thought.","evidence_ids":["E015","E022"]}]},{"capability":"instruction_following","models":[{"model":"Qwen3.5-35B-A3B","status":"yes","notes":"Qwen reports 91.9 on IFEval and 70.2 on IFBench.","evidence_ids":["E002"]},{"model":"Mistral Small 4","status":"yes","notes":"Official card claims strong system-prompt adherence.","evidence_ids":["E005"]},{"model":"DeepSeek-V3.2","status":"partial","notes":"General instruction use is supported, but no directly comparable instruction-following result was found for this run.","evidence_ids":["E008"]},{"model":"GLM-5.2","status":"partial","notes":"Strong task and agent performance is documented, but independent general instruction-following coverage was incomplete.","evidence_ids":["E011","E021"]},{"model":"gpt-oss-120b","status":"yes","notes":"OpenAI explicitly positions the model for strong instruction following; Qwen reports IFEval 88.9.","evidence_ids":["E002","E015"]}]},{"capability":"long_context","models":[{"model":"Qwen3.5-35B-A3B","status":"yes","notes":"262,144 tokens native and extensible to approximately 1,010,000 tokens.","evidence_ids":["E001"]},{"model":"Mistral Small 4","status":"yes","notes":"256k-token context.","evidence_ids":["E005"]},{"model":"DeepSeek-V3.2","status":"yes","notes":"Approximately 128k tokens with DeepSeek Sparse Attention optimized for long context.","evidence_ids":["E008","E020"]},{"model":"GLM-5.2","status":"yes","notes":"Native 1M-token context and an architecture optimized to reduce sparse-attention cost at that length.","evidence_ids":["E011","E028"]},{"model":"gpt-oss-120b","status":"yes","notes":"Native 128k-token context.","evidence_ids":["E015"]}]},{"capability":"multilingual","models":[{"model":"Qwen3.5-35B-A3B","status":"yes","notes":"Official claim covers 201 languages and dialects; multilingual benchmark results are also published.","evidence_ids":["E001","E002"]},{"model":"Mistral Small 4","status":"yes","notes":"Officially supports dozens of languages, including major European, Asian, and Arabic languages.","evidence_ids":["E005"]},{"model":"DeepSeek-V3.2","status":"unknown","notes":"Multilingual capability is plausible but was not sufficiently characterized in the official evidence collected for this run.","evidence_ids":["E008"]},{"model":"GLM-5.2","status":"partial","notes":"The official repository explicitly tags English and Chinese, but broad multilingual coverage was not established.","evidence_ids":["E012"]},{"model":"gpt-oss-120b","status":"partial","notes":"OpenAI states that training data was mostly English, so multilingual use is supported less explicitly than Qwen or Mistral.","evidence_ids":["E015"]}]},{"capability":"coding","models":[{"model":"Qwen3.5-35B-A3B","status":"yes","notes":"Strong SWE-bench Verified result, though LiveCodeBench v6 trails gpt-oss-120b in Qwen's table.","evidence_ids":["E002"]},{"model":"Mistral Small 4","status":"yes","notes":"Unifies Devstral-derived agentic coding with general instruction and reasoning capabilities.","evidence_ids":["E005"]},{"model":"DeepSeek-V3.2","status":"yes","notes":"Reasoning and agent training explicitly cover coding and complex tool environments.","evidence_ids":["E008","E010"]},{"model":"GLM-5.2","status":"yes","notes":"Strong vendor and independent evidence for terminal, repository, and long-horizon coding.","evidence_ids":["E011","E021","E023"]},{"model":"gpt-oss-120b","status":"yes","notes":"OpenAI emphasizes STEM and coding; the model leads Qwen on LiveCodeBench v6 in Qwen's comparison.","evidence_ids":["E002","E015"]}]},{"capability":"tool_use","models":[{"model":"Qwen3.5-35B-A3B","status":"yes","notes":"Official agent usage, function calling, and tool-oriented benchmarks are documented.","evidence_ids":["E001","E002"]},{"model":"Mistral Small 4","status":"yes","notes":"Native function calling is supported in both instruct and reasoning operation.","evidence_ids":["E005"]},{"model":"DeepSeek-V3.2","status":"yes","notes":"Supports tool use in both thinking and non-thinking modes.","evidence_ids":["E010"]},{"model":"GLM-5.2","status":"yes","notes":"Official runtimes expose GLM tool and reasoning parsers; tool benchmarks are published.","evidence_ids":["E011","E028"]},{"model":"gpt-oss-120b","status":"yes","notes":"Designed for web search, Python execution, function calling, and agentic workflows.","evidence_ids":["E015"]}]},{"capability":"structured_output","models":[{"model":"Qwen3.5-35B-A3B","status":"yes","notes":"Official guidance includes standardized JSON output patterns and the ecosystem exposes structured-output use.","evidence_ids":["E001","E003"]},{"model":"Mistral Small 4","status":"yes","notes":"Official card explicitly documents native JSON output.","evidence_ids":["E005"]},{"model":"DeepSeek-V3.2","status":"partial","notes":"Tool calling is documented, but robust schema-constrained structured output was not independently established.","evidence_ids":["E008","E010"]},{"model":"GLM-5.2","status":"partial","notes":"Tool parsers are supported, but evidence for strict arbitrary-schema conformance is incomplete.","evidence_ids":["E011","E028"]},{"model":"gpt-oss-120b","status":"yes","notes":"OpenAI explicitly documents Structured Outputs support.","evidence_ids":["E015"]}]},{"capability":"agent_use","models":[{"model":"Qwen3.5-35B-A3B","status":"yes","notes":"General-agent and search-agent benchmarks are published, and Qwen-AgentWorld demonstrates further adaptation headroom at the same scale.","evidence_ids":["E002","E026"]},{"model":"Mistral Small 4","status":"yes","notes":"Explicitly designed for coding agents, research assistants, and document workflows.","evidence_ids":["E005"]},{"model":"DeepSeek-V3.2","status":"yes","notes":"Agent training spans more than 1,800 environments and 85,000 complex instructions according to the release.","evidence_ids":["E010"]},{"model":"GLM-5.2","status":"yes","notes":"Optimized for long-horizon autonomous coding and tool tasks.","evidence_ids":["E011","E023"]},{"model":"gpt-oss-120b","status":"yes","notes":"Designed for agentic workflows with configurable reasoning, tools, and structured outputs.","evidence_ids":["E015"]}]}],"competitor_deep_dives":[{"competitor":"Mistral Small 4","threat_level":"medium","where_they_beat_product":[{"text":"Mistral reports substantially shorter reasoning outputs on AA-LCR and LiveCodeBench, suggesting better completion-time and token efficiency for some reasoning and coding workloads.","evidence_ids":["E005"]},{"text":"Its unified instruct/reasoning design exposes a simple per-request reasoning-effort control and strong native JSON/function-calling positioning.","evidence_ids":["E005"]}],"where_product_beats_them":[{"text":"Qwen scores 30 versus Mistral's 20 on the independent Artificial Analysis Intelligence Index.","evidence_ids":["E018","E019"]},{"text":"Qwen requires much less resident and active model capacity: 35B/3B versus 119B/6.5B.","evidence_ids":["E001","E005"]},{"text":"Qwen has materially greater visible Hugging Face adoption and quantization breadth.","evidence_ids":["E003","E006"]}],"recent_moves":[{"text":"Mistral released Small 4 as an Apache-2.0 multimodal model combining instruct, reasoning, and agentic coding.","date":"2026-03-16","evidence_ids":["E007"]}],"implication":"Mistral is a credible efficiency and usability threat above the workstation tier. Qwen should benchmark end-to-end completion time and token consumption, not just tokens per second or accuracy.","evidence_ids":["E005","E018","E019"]},{"competitor":"DeepSeek-V3.2","threat_level":"medium","where_they_beat_product":[{"text":"DeepSeek-V3.2 reasoning scores 33 versus Qwen's estimated 30 on the independent Artificial Analysis Intelligence Index.","evidence_ids":["E018","E020"]},{"text":"DeepSeek has explicit thinking-in-tool-use training across a very large set of agent environments.","evidence_ids":["E010"]}],"where_product_beats_them":[{"text":"Qwen is dramatically easier to deploy locally at 35B total and 3B active versus 685B total and 37B active.","evidence_ids":["E001","E020"]},{"text":"Qwen is multimodal and has a larger native context, while DeepSeek-V3.2 is text-only with about 128k context in the independent specification.","evidence_ids":["E001","E020"]},{"text":"Qwen has more monthly downloads and a much broader visible quantization ecosystem on Hugging Face.","evidence_ids":["E003","E009"]}],"recent_moves":[{"text":"DeepSeek-V3.2 has been superseded by DeepSeek V4 Pro in current independent tracking.","date":null,"evidence_ids":["E025"]}],"implication":"DeepSeek-V3.2 is a capability benchmark but is poorly matched to Qwen's local-deployment value proposition. The more important monitoring target is its successor generation.","evidence_ids":["E020","E025"]},{"competitor":"GLM-5.2","threat_level":"high","where_they_beat_product":[{"text":"GLM leads the independent intelligence comparison by 23 points, 53 versus Qwen's estimated 30.","evidence_ids":["E018","E021"]},{"text":"GLM provides a native 1M-token context and strong long-horizon coding and terminal results.","evidence_ids":["E011","E023"]},{"text":"GLM has rapidly reached roughly the same monthly Hugging Face download level as Qwen and has accumulated 144 visible quantizations.","evidence_ids":["E003","E013"]}],"where_product_beats_them":[{"text":"Qwen's 35B/3B footprint is vastly more practical than GLM's approximately 744B/40B footprint.","evidence_ids":["E001","E012"]},{"text":"Qwen supports image and video inputs and broader documented multilingual coverage; GLM-5.2 is text-only and explicitly tagged for English and Chinese.","evidence_ids":["E001","E012","E021"]},{"text":"Qwen has nearly twice as many visible Hugging Face quantizations.","evidence_ids":["E003","E013"]}],"recent_moves":[{"text":"GLM-5.2 was released and assessed as an open-weight model in June 2026.","date":"2026-06-16","evidence_ids":["E014"]},{"text":"Artificial Analysis identified GLM-5.2 as the leading open-weight model on its Intelligence Index.","date":"2026-06-16","evidence_ids":["E023"]}],"implication":"GLM is the strongest threat for customers prioritizing maximum coding and agent quality over hardware cost. Qwen should defend the sub-100GB and workstation segments while transferring AgentWorld-style gains into a general release.","evidence_ids":["E011","E021","E023","E026"]},{"competitor":"gpt-oss-120b","threat_level":"medium","where_they_beat_product":[{"text":"gpt-oss-120b leads Qwen on LiveCodeBench v6, 82.7 versus 74.6, in Qwen's own benchmark table.","evidence_ids":["E002"]},{"text":"It has the largest visible adoption signal in the set at more than 5.1 million Hugging Face downloads in the last month.","evidence_ids":["E016"]},{"text":"OpenAI provides native MXFP4 packaging, an explicit single-80GB target, structured outputs, Harmony tooling, and broad runtime support.","evidence_ids":["E015","E017"]}],"where_product_beats_them":[{"text":"Qwen scores higher on the independent intelligence index, 30 estimated versus 24.","evidence_ids":["E018","E022"]},{"text":"Qwen is smaller, activates fewer parameters, supports vision and video, and has roughly twice the native context.","evidence_ids":["E001","E015"]},{"text":"Qwen leads on MMLU-Pro, IFEval, AA-LCR, GPQA Diamond, and SWE-bench Verified in Qwen's same-table evaluation.","evidence_ids":["E002"]}],"recent_moves":[],"implication":"gpt-oss-120b is the main ecosystem and enterprise-familiarity threat. Qwen should emphasize its smaller footprint, multimodality, multilingual reach, and broader quantization choice while improving competitive-programming quality.","evidence_ids":["E002","E003","E015","E016","E018","E022"]}],"ecosystem_adoption":[{"model":"Qwen3.5-35B-A3B","huggingface_downloads":2486231,"huggingface_downloads_period":"last_month_as_of_2026-08-25","runtime_support":["Transformers","vLLM","SGLang","KTransformers","llama.cpp","Ollama","LM Studio","Docker Model Runner"],"quantization_ecosystem":"strong","community_signals":["280 visible Hugging Face quantizations","79 Hugging Face Spaces","160 visible fine-tunes and 35 adapters"],"notes":"The strongest visible quantization breadth in the requested set, with broad consumer and server runtime coverage.","evidence_ids":["E003"]},{"model":"Mistral Small 4","huggingface_downloads":76490,"huggingface_downloads_period":"last_month_as_of_2026-08-25","runtime_support":["vLLM","llama.cpp","LM Studio","SGLang","Transformers"],"quantization_ecosystem":"medium","community_signals":["33 visible Hugging Face quantizations","21 Hugging Face Spaces","official NVFP4 and speculative-decoding checkpoints"],"notes":"Good runtime coverage and first-party efficiency artifacts, but adoption is materially below Qwen, DeepSeek, GLM, and gpt-oss.","evidence_ids":["E005","E006"]},{"model":"DeepSeek-V3.2","huggingface_downloads":1201878,"huggingface_downloads_period":"last_month_as_of_2026-08-25","runtime_support":["Transformers","vLLM","SGLang","llama.cpp","Ollama","LM Studio","Docker Model Runner"],"quantization_ecosystem":"medium","community_signals":["19 visible Hugging Face quantizations","100 Hugging Face Spaces","61 visible downstream fine-tunes"],"notes":"Broad serving support and substantial adoption, constrained by the model's very large resident footprint and successor status.","evidence_ids":["E009","E025"]},{"model":"GLM-5.2","huggingface_downloads":2420481,"huggingface_downloads_period":"last_month_as_of_2026-08-25","runtime_support":["SGLang","vLLM","Transformers","KTransformers","Unsloth","vLLM-Ascend","xLLM","community llama.cpp and MLX"],"quantization_ecosystem":"strong","community_signals":["144 visible Hugging Face quantizations","100 Hugging Face Spaces","official FP8, NVIDIA NVFP4, and AMD MXFP4 checkpoints"],"notes":"Very rapid adoption for a recent release, although most local deployments still require high-end multi-accelerator or large unified-memory systems.","evidence_ids":["E012","E013","E028"]},{"model":"gpt-oss-120b","huggingface_downloads":5121083,"huggingface_downloads_period":"last_month_as_of_2026-08-25","runtime_support":["Transformers","vLLM","SGLang","PyTorch/Triton","Ollama","llama.cpp","LM Studio","Apple Metal","Docker Model Runner"],"quantization_ecosystem":"strong","community_signals":["Highest monthly Hugging Face download count in the requested set","native MXFP4 release","official Python and Rust Harmony tooling","reference PyTorch and Apple Metal implementations"],"notes":"The strongest overall adoption and enterprise-familiarity signal, with an unusually clear single-80GB deployment target.","evidence_ids":["E015","E016","E017"]}],"strategic_actions":[{"priority":1,"category":"improve","action":"Move the product narrative and supported production path to the newest 35B-A3B generation, or publish a clearly versioned Qwen3.5 refresh with current agentic post-training.","rationale":"The exact product is already marked as superseded, while GLM-5.2 has reset the open-weight quality frontier. Qwen-AgentWorld shows that substantial agent gains are possible without abandoning the efficient 35B-A3B footprint.","evidence_ids":["E021","E024","E026"]},{"priority":2,"category":"defend","action":"Own the 'maximum capability per resident GB' position with reproducible single-workstation and single-node deployment recipes.","rationale":"Qwen is dramatically smaller than every competitor and has the broadest visible quantization ecosystem, but this advantage should be supported by standardized latency, throughput, energy, and quality measurements at matched hardware and context.","evidence_ids":["E001","E003","E005","E009","E012","E015","E027"]},{"priority":3,"category":"improve","action":"Prioritize long-horizon coding, terminal operation, repository planning, and recovery from failed tool calls.","rationale":"GLM-5.2's strongest differentiation is agentic coding, while gpt-oss-120b leads Qwen on LiveCodeBench v6. Qwen's SWE-bench result is good, but broader coding-agent robustness is now the competitive battleground.","evidence_ids":["E002","E011","E021","E023"]},{"priority":4,"category":"investigate","action":"Run matched token-efficiency and end-to-end completion-time studies against Mistral Small 4 and gpt-oss-120b.","rationale":"Qwen's sparse architecture is compute-efficient, but independent evidence flags high verbosity and Mistral claims materially shorter successful outputs. Output length can dominate local latency and energy.","evidence_ids":["E005","E015","E029"]},{"priority":5,"category":"defend","action":"Package air-gapped deployment as a first-class product, including mirrored dependencies, signed artifacts, SBOMs, offline documentation, and validated container images.","rationale":"Every model in the set can technically operate offline, so the differentiator will be deployment assurance and ease. Qwen's smaller footprint makes comprehensive offline packaging more tractable.","evidence_ids":["E001","E003","E017","E027"]},{"priority":6,"category":"investigate","action":"Validate the extended approximately 1M-token mode with independent retrieval, multi-document reasoning, and long-agent-trajectory evaluations.","rationale":"Qwen documents 262k native context with extension to roughly 1.01M, whereas GLM positions 1M as native and independently scores strongly on AA-LCR. Buyers will distinguish nominal context from reliable usable context.","evidence_ids":["E001","E011","E021","E023"]},{"priority":7,"category":"monitor","action":"Track GLM-5.2 quantization adoption, smaller distilled derivatives, and runtime optimizations that could reduce its hardware disadvantage.","rationale":"GLM's current weakness is deployment size. Its rapid download and quantization growth means that improved compression or smaller derivatives could erode Qwen's primary moat.","evidence_ids":["E012","E013","E028"]},{"priority":8,"category":"defend","action":"Emphasize Qwen's combined multimodal, multilingual, local-agent proposition rather than isolated reasoning scores.","rationale":"Qwen uniquely combines documented video support, 201-language coverage, a small active footprint, long context, and local tool use. GLM, DeepSeek, and gpt-oss are text-only in the evaluated variants.","evidence_ids":["E001","E005","E020","E021","E015"]}],"evidence":[{"id":"E001","claim":"Qwen3.5-35B-A3B architecture, parameters, context, modalities, multilingual scope, and runtime compatibility.","source_title":"Qwen3.5-35B-A3B Model Card","publisher":"Qwen / Alibaba","url":"https://huggingface.co/Qwen/Qwen3.5-35B-A3B","published_date":"2026-02-24","accessed_date":"2026-08-25","source_type":"official","confidence":"high","quote_or_data":"35B total, 3B active; native 262,144 context, extensible to 1,010,000; vision encoder and 201 languages."},{"id":"E002","claim":"Qwen vendor-published benchmark comparison with gpt-oss-120b.","source_title":"Qwen3.5-35B-A3B Model Card — Benchmark Results","publisher":"Qwen / Alibaba","url":"https://huggingface.co/Qwen/Qwen3.5-35B-A3B","published_date":"2026-02-24","accessed_date":"2026-08-25","source_type":"official","confidence":"high","quote_or_data":"Qwen/gpt-oss: MMLU-Pro 85.3/80.8; IFEval 91.9/88.9; LiveCodeBench v6 74.6/82.7; SWE-bench Verified 69.2/62.0."},{"id":"E003","claim":"Qwen repository adoption, quantization breadth, and local runtime ecosystem.","source_title":"Qwen3.5-35B-A3B Hugging Face Repository","publisher":"Qwen / Hugging Face","url":"https://huggingface.co/Qwen/Qwen3.5-35B-A3B","published_date":null,"accessed_date":"2026-08-25","source_type":"official","confidence":"high","quote_or_data":"2,486,231 downloads last month, 280 quantizations, 79 Spaces; Transformers, vLLM, SGLang and KTransformers compatibility."},{"id":"E004","claim":"Qwen3.5-35B-A3B release date.","source_title":"Qwen3.6 Repository Release History","publisher":"Qwen / Alibaba","url":"https://github.com/QwenLM/Qwen3.6","published_date":null,"accessed_date":"2026-08-25","source_type":"official","confidence":"high","quote_or_data":"2026-02-24: Qwen3.5-122B-A10B, Qwen3.5-35B-A3B, and Qwen3.5-27B were released."},{"id":"E005","claim":"Mistral Small 4 specifications, capabilities, reasoning controls, token-efficiency claims, and license.","source_title":"Mistral Small 4 119B A6B Model Card","publisher":"Mistral AI","url":"https://huggingface.co/mistralai/Mistral-Small-4-119B-2603","published_date":"2026-03-16","accessed_date":"2026-08-25","source_type":"official","confidence":"high","quote_or_data":"119B total, 6.5B active, 256k context, text and image input, function calls, JSON output, Apache 2.0."},{"id":"E006","claim":"Mistral Small 4 downloads, quantizations, and supported runtimes.","source_title":"Mistral Small 4 119B A6B Hugging Face Repository","publisher":"Mistral AI / Hugging Face","url":"https://huggingface.co/mistralai/Mistral-Small-4-119B-2603","published_date":null,"accessed_date":"2026-08-25","source_type":"official","confidence":"high","quote_or_data":"76,490 downloads last month, 33 quantizations and 21 Spaces; vLLM, llama.cpp, LM Studio, SGLang and Transformers."},{"id":"E007","claim":"Mistral Small 4 release date and open-weight positioning.","source_title":"Introducing Mistral Small 4","publisher":"Mistral AI","url":"https://mistral.ai/news/mistral-small-4/","published_date":"2026-03-16","accessed_date":"2026-08-25","source_type":"official","confidence":"high","quote_or_data":"Mistral Small 4 unifies reasoning, multimodal, and agentic coding capabilities under Apache 2.0."},{"id":"E008","claim":"DeepSeek-V3.2 architecture direction, reasoning, long-context attention, local serving, and license.","source_title":"DeepSeek-V3.2: Efficient Reasoning & Agentic AI","publisher":"DeepSeek","url":"https://huggingface.co/deepseek-ai/DeepSeek-V3.2","published_date":"2025-12-01","accessed_date":"2026-08-25","source_type":"official","confidence":"high","quote_or_data":"DeepSeek Sparse Attention targets efficient long context; the weights use the MIT license and support local vLLM and SGLang serving."},{"id":"E009","claim":"DeepSeek-V3.2 model size, weight formats, downloads, and quantization ecosystem.","source_title":"DeepSeek-V3.2 Hugging Face Repository","publisher":"DeepSeek / Hugging Face","url":"https://huggingface.co/deepseek-ai/DeepSeek-V3.2","published_date":null,"accessed_date":"2026-08-25","source_type":"official","confidence":"high","quote_or_data":"685B parameters, BF16 and FP8 tensors, 1,201,878 downloads last month, 19 quantizations and 100 Spaces."},{"id":"E010","claim":"DeepSeek-V3.2 release and thinking-in-tool-use capability.","source_title":"DeepSeek-V3.2 Release","publisher":"DeepSeek","url":"https://api-docs.deepseek.com/news/news251201/","published_date":"2025-12-01","accessed_date":"2026-08-25","source_type":"official","confidence":"high","quote_or_data":"V3.2 supports tool use in thinking and non-thinking modes; agent training covered 1,800-plus environments and 85,000-plus instructions."},{"id":"E011","claim":"GLM-5.2 long-context, architecture improvements, coding and agent benchmark results.","source_title":"GLM-5.2 Model Card","publisher":"Z.ai","url":"https://huggingface.co/zai-org/GLM-5.2","published_date":"2026-06-16","accessed_date":"2026-08-25","source_type":"official","confidence":"high","quote_or_data":"Native 1M context; HLE 40.5, GPQA 91.2, SWE-bench Pro 62.1 and Terminal-Bench 2.1 81.0."},{"id":"E012","claim":"GLM-5.2 parameter specification, license, and supported serving frameworks.","source_title":"GLM-5 Official Repository","publisher":"Z.ai","url":"https://github.com/zai-org/GLM-5","published_date":null,"accessed_date":"2026-08-25","source_type":"official","confidence":"high","quote_or_data":"GLM-5.2 is listed as 744B-A40B with BF16 and FP8 weights and support for SGLang, vLLM, Transformers and KTransformers."},{"id":"E013","claim":"GLM-5.2 current Hugging Face adoption and quantization signals.","source_title":"GLM-5.2 Hugging Face Repository","publisher":"Z.ai / Hugging Face","url":"https://huggingface.co/zai-org/GLM-5.2","published_date":null,"accessed_date":"2026-08-25","source_type":"official","confidence":"high","quote_or_data":"2,420,481 downloads last month, 144 quantizations, 100 Spaces and a 753B serialized parameter count."},{"id":"E014","claim":"Authoritative GLM-5.2 release date and open-weight status.","source_title":"CAISI Assessment of Z.ai's GLM-5.2","publisher":"U.S. National Institute of Standards and Technology","url":"https://www.nist.gov/news-events/news/2026/07/caisi-assessment-zais-glm-52","published_date":"2026-07-08","accessed_date":"2026-08-25","source_type":"technical_analysis","confidence":"high","quote_or_data":"NIST states that GLM-5.2 was released as an open-weight model on June 16, 2026."},{"id":"E015","claim":"gpt-oss-120b parameters, context, architecture, capabilities, quantization, memory target, and training-language emphasis.","source_title":"Introducing gpt-oss","publisher":"OpenAI","url":"https://openai.com/index/introducing-gpt-oss/","published_date":"2025-08-05","accessed_date":"2026-08-25","source_type":"official","confidence":"high","quote_or_data":"117B total, 5.1B active, 128k context, native MXFP4 within 80GB; mostly English training with tools and Structured Outputs."},{"id":"E016","claim":"gpt-oss-120b downloads, formats, and runtime ecosystem.","source_title":"gpt-oss-120b Hugging Face Repository","publisher":"OpenAI / Hugging Face","url":"https://huggingface.co/openai/gpt-oss-120b","published_date":"2025-08-05","accessed_date":"2026-08-25","source_type":"official","confidence":"high","quote_or_data":"5,121,083 downloads last month; Transformers, vLLM, SGLang, PyTorch/Triton and Ollama examples are provided."},{"id":"E017","claim":"gpt-oss self-hosting privacy, license, and common local runtimes.","source_title":"OpenAI Open-Weight Models","publisher":"OpenAI","url":"https://help.openai.com/en/articles/11870455-openai-open-weight-models","published_date":null,"accessed_date":"2026-08-25","source_type":"official","confidence":"high","quote_or_data":"Self-hosted data is not processed by OpenAI unless shared; Apache 2.0 weights support vLLM, Ollama and llama.cpp."},{"id":"E018","claim":"Independent Qwen3.5-35B-A3B reasoning score.","source_title":"Qwen3.5 35B A3B Intelligence, Performance & Price Analysis","publisher":"Artificial Analysis","url":"https://artificialanalysis.ai/models/qwen3-5-35b-a3b/","published_date":"2026-02-24","accessed_date":"2026-08-25","source_type":"independent_benchmark","confidence":"medium","quote_or_data":"Reasoning mode scores 30 estimated on the Artificial Analysis Intelligence Index."},{"id":"E019","claim":"Independent Mistral Small 4 reasoning score and speed.","source_title":"Mistral Small 4 Intelligence, Performance & Price Analysis","publisher":"Artificial Analysis","url":"https://artificialanalysis.ai/models/mistral-small-4","published_date":"2026-03-16","accessed_date":"2026-08-25","source_type":"independent_benchmark","confidence":"high","quote_or_data":"Reasoning mode scores 20 and was measured at approximately 179 output tokens per second."},{"id":"E020","claim":"Independent DeepSeek-V3.2 reasoning score and technical specification.","source_title":"DeepSeek V3.2 Intelligence, Performance & Price Analysis","publisher":"Artificial Analysis","url":"https://artificialanalysis.ai/models/deepseek-v3-2-reasoning","published_date":"2025-12-01","accessed_date":"2026-08-25","source_type":"independent_benchmark","confidence":"medium","quote_or_data":"Reasoning mode scores 33 estimated; 685B total, 37B active, 128k context and text-only input."},{"id":"E021","claim":"Independent GLM-5.2 intelligence score and context specification.","source_title":"GLM-5.2 Intelligence, Performance & Price Analysis","publisher":"Artificial Analysis","url":"https://artificialanalysis.ai/models/glm-5-2","published_date":"2026-06-16","accessed_date":"2026-08-25","source_type":"independent_benchmark","confidence":"high","quote_or_data":"GLM-5.2 max scores 53, supports a 1M-token context and is text-only."},{"id":"E022","claim":"Independent gpt-oss-120b intelligence score and model specification.","source_title":"gpt-oss-120b Intelligence, Performance & Price Analysis","publisher":"Artificial Analysis","url":"https://artificialanalysis.ai/models/gpt-oss-120b","published_date":"2025-08-05","accessed_date":"2026-08-25","source_type":"independent_benchmark","confidence":"high","quote_or_data":"High reasoning scores 24; 117B total, 5.1B active and 131k context."},{"id":"E023","claim":"Independent assessment that GLM-5.2 became the leading open-weight model and corroborating sub-benchmark results.","source_title":"GLM-5.2 Is the New Leading Open Weights Model on the Artificial Analysis Intelligence Index","publisher":"Artificial Analysis","url":"https://artificialanalysis.ai/articles/glm-5-2-is-the-new-leading-open-weights-model-on-the-artificial-analysis-intelligence-index/","published_date":"2026-06-16","accessed_date":"2026-08-25","source_type":"independent_benchmark","confidence":"high","quote_or_data":"GLM led open weights, with approximately 40 on HLE, 71 on AA-LCR and 50 on SciCode in the published analysis."},{"id":"E024","claim":"Qwen3.5-35B-A3B successor and deprecation status in current independent tracking.","source_title":"Qwen3.5 35B A3B Provider Benchmarking","publisher":"Artificial Analysis","url":"https://artificialanalysis.ai/models/qwen3-5-35b-a3b/providers","published_date":null,"accessed_date":"2026-08-25","source_type":"independent_benchmark","confidence":"high","quote_or_data":"The page marks Qwen3.5-35B-A3B deprecated and recommends Qwen3.6-35B-A3B."},{"id":"E025","claim":"DeepSeek-V3.2 successor and deprecation status in current independent tracking.","source_title":"DeepSeek V3.2 Provider Benchmarking","publisher":"Artificial Analysis","url":"https://artificialanalysis.ai/models/deepseek-v3-2/providers","published_date":null,"accessed_date":"2026-08-25","source_type":"independent_benchmark","confidence":"high","quote_or_data":"The page marks DeepSeek-V3.2 deprecated and recommends DeepSeek V4 Pro."},{"id":"E026","claim":"Qwen-AgentWorld demonstrates agent-specific improvement potential at the 35B-A3B scale.","source_title":"Qwen-AgentWorld: Language World Models for General Agents","publisher":"Qwen / Alibaba","url":"https://qwen.ai/blog?id=qwen-agentworld","published_date":"2026-06-23","accessed_date":"2026-08-25","source_type":"official","confidence":"high","quote_or_data":"At 35B-A3B, the reported pipeline improves the overall agent average by 8.66 points, from 47.73 to 56.39."},{"id":"E027","claim":"Indicative Qwen low-bit local artifact size.","source_title":"Qwen3.5-35B-A3B Local Model Notes","publisher":"LLM Lab community repository","url":"https://github.com/githabideri/llmlab/blob/main/models/qwen3.5-35b-a3b.md","published_date":null,"accessed_date":"2026-08-25","source_type":"community","confidence":"medium","quote_or_data":"A Q4_K_M GGUF is reported at approximately 20 GB, with an additional 858 MB vision projector."},{"id":"E028","claim":"GLM-5.2 production runtime versions, quantized checkpoints, context, and accelerator guidance.","source_title":"vLLM GLM-5.2 Recipe","publisher":"vLLM Project","url":"https://github.com/vllm-project/recipes/blob/main/models/zai-org/GLM-5.2.yaml","published_date":"2026-06-16","accessed_date":"2026-08-25","source_type":"technical_analysis","confidence":"high","quote_or_data":"Recipe lists approximately 743B total, 39B active, 1,048,576 context, vLLM 0.23, and FP8, NVFP4 and MXFP4 checkpoints."},{"id":"E029","claim":"Independent evidence that Qwen3.5-35B-A3B can be verbose.","source_title":"Qwen3.5 35B A3B Non-Reasoning Intelligence, Performance & Price Analysis","publisher":"Artificial Analysis","url":"https://artificialanalysis.ai/models/qwen3-5-35b-a3b-non-reasoning","published_date":"2026-02-24","accessed_date":"2026-08-25","source_type":"independent_benchmark","confidence":"high","quote_or_data":"The evaluation generated 42 million output tokens versus a 15 million median for its comparison class."}]}</script>
+
+<script>
+(() => {
+  'use strict';
+
+  const app = document.getElementById('app');
+  const raw = document.getElementById('dashboard-data').textContent.trim();
+
+  if (raw === ('__DASHBOARD_' + 'DATA__')) {
+    app.textContent = 'Dashboard template loaded. Waiting for n8n to inject research JSON.';
+    app.className = 'empty';
+    return;
+  }
+
+  let data;
+  try {
+    data = JSON.parse(raw);
+  } catch (error) {
+    const box = document.createElement('div');
+    box.className = 'error';
+    box.textContent = 'Dashboard data is not valid JSON: ' + error.message;
+    app.appendChild(box);
+    return;
+  }
+
+  const arr = value => Array.isArray(value) ? value : [];
+  const value = (v, fallback = 'Unknown') => (v === null || v === undefined || v === '') ? fallback : String(v);
+  const join = (v, sep = ', ') => arr(v).filter(x => x !== null && x !== undefined && x !== '').join(sep);
+  const evidence = ids => join(ids) || 'No evidence ID';
+
+  function el(tag, text, className) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined && text !== null) node.textContent = String(text);
+    return node;
+  }
+
+  function append(parent, ...children) {
+    children.filter(Boolean).forEach(child => parent.appendChild(child));
+    return parent;
+  }
+
+  function section(title) {
+    const s = el('section');
+    s.appendChild(el('h2', title));
+    app.appendChild(s);
+    return s;
+  }
+
+  function card(title) {
+    const c = el('div', null, 'card');
+    if (title) c.appendChild(el('h3', title));
+    return c;
+  }
+
+  function badge(text, extraClass = '') {
+    return el('span', text, ('badge ' + extraClass).trim());
+  }
+
+  function list(items, renderer, emptyText = 'None identified.') {
+    const ul = el('ul');
+    const rows = arr(items);
+    if (!rows.length) {
+      ul.appendChild(el('li', emptyText, 'empty'));
+      return ul;
+    }
+    rows.forEach(item => ul.appendChild(renderer(item)));
+    return ul;
+  }
+
+  function textEvidenceItem(item, prefix = '') {
+    const li = el('li');
+    if (prefix) li.appendChild(el('strong', prefix));
+    li.appendChild(document.createTextNode(value(item?.text, 'Insufficient evidence')));
+    li.appendChild(document.createTextNode(' '));
+    li.appendChild(el('span', '[' + evidence(item?.evidence_ids) + ']', 'small'));
+    return li;
+  }
+
+  function changeItem(item) {
+    const li = el('li');
+    li.appendChild(el('strong', value(item?.entity)));
+    li.appendChild(document.createTextNode(': ' + value(item?.change, 'Insufficient evidence')));
+    if (item?.date) li.appendChild(document.createTextNode(' (' + item.date + ')'));
+    li.appendChild(document.createTextNode(' '));
+    li.appendChild(el('span', '[' + evidence(item?.evidence_ids) + ']', 'small'));
+    return li;
+  }
+
+  function table(headers, rows) {
+    const wrap = el('div', null, 'scroll');
+    const t = el('table');
+    const thead = el('thead');
+    const hr = el('tr');
+    headers.forEach(h => hr.appendChild(el('th', h)));
+    thead.appendChild(hr);
+    t.appendChild(thead);
+
+    const tbody = el('tbody');
+    rows.forEach(row => {
+      const tr = el('tr');
+      row.forEach(cell => {
+        const td = el('td');
+        if (cell instanceof Node) td.appendChild(cell);
+        else td.textContent = value(cell, '');
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+    t.appendChild(tbody);
+    wrap.appendChild(t);
+    return wrap;
+  }
+
+  function safeLink(url, label) {
+    const rawUrl = value(url, '');
+    try {
+      const parsed = new URL(rawUrl);
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return el('span', value(label, rawUrl));
+      const a = el('a', value(label, rawUrl));
+      a.href = parsed.href;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      return a;
+    } catch {
+      return el('span', value(label, rawUrl || 'Unknown'));
+    }
+  }
+
+  const meta = data.meta || {};
+  const coverage = data.coverage || {};
+  const executive = data.executive_position || {};
+  const changes = data.changes || {};
+  const snapshot = data.product_snapshot || {};
+
+  document.title = value(meta.product, 'Product') + ' — Competitive Intelligence Dashboard';
+
+  // Header
+  const header = el('header');
+  header.appendChild(el('h1', value(meta.product, 'Product') + ' — Competitive Intelligence'));
+  header.appendChild(el('div',
+    'Provider: ' + value(meta.provider) + ' · Run: ' + value(meta.run_date) + ' · Window: ' + value(meta.research_window),
+    'meta'
+  ));
+  const badges = el('div');
+  badges.style.marginTop = '8px';
+  badges.appendChild(badge('Coverage: ' + value(coverage.overall), coverage.overall ? 'status-' + coverage.overall : ''));
+  badges.appendChild(badge('Perspective: ' + value(meta.perspective)));
+  badges.appendChild(badge('Change state: ' + value(changes.status)));
+  header.appendChild(badges);
+  app.appendChild(header);
+
+  // 1. Competitive Position
+  {
+    const s = section('1. Competitive Position');
+    s.appendChild(el('div', value(executive.headline, 'Insufficient evidence'), 'headline'));
+
+    const g1 = el('div', null, 'grid');
+    const overall = card('Overall Position');
+    overall.appendChild(el('p', value(executive.overall_position)));
+
+    const sc = executive.strongest_competitor || {};
+    const strongest = card('Strongest Competitor');
+    const pName = el('p');
+    pName.appendChild(el('strong', value(sc.name)));
+    strongest.appendChild(pName);
+    strongest.appendChild(el('p', value(sc.why, 'Insufficient evidence')));
+    strongest.appendChild(el('div', evidence(sc.evidence_ids), 'small'));
+
+    const bt = executive.biggest_threat || {};
+    const threat = card('Biggest Threat');
+    threat.appendChild(el('p', value(bt.text, 'Insufficient evidence')));
+    threat.appendChild(el('div', evidence(bt.evidence_ids), 'small'));
+
+    append(g1, overall, strongest, threat);
+    s.appendChild(g1);
+
+    const g2 = el('div', null, 'grid');
+    g2.style.marginTop = '12px';
+    const strengths = card('Top Strengths');
+    strengths.appendChild(list(executive.top_strengths, x => textEvidenceItem(x), 'No supported strengths found.'));
+    const weaknesses = card('Top Weaknesses');
+    weaknesses.appendChild(list(executive.top_weaknesses, x => textEvidenceItem(x), 'No supported weaknesses found.'));
+    append(g2, strengths, weaknesses);
+    s.appendChild(g2);
+  }
+
+  // 2. What Changed
+  {
+    const s = section('2. What Changed');
+    const g = el('div', null, 'grid');
+    [['New', changes.new], ['Changed', changes.changed], ['Removed', changes.removed]].forEach(([title, items]) => {
+      const c = card(title);
+      c.appendChild(list(items, changeItem));
+      g.appendChild(c);
+    });
+    s.appendChild(g);
+  }
+
+  // 3. Product Snapshot
+  {
+    const s = section('3. Product Snapshot');
+    const modelUrl = safeLink(snapshot.official_model_url, snapshot.official_model_url || 'Unknown');
+    s.appendChild(table(['Field', 'Value'], [
+      ['Architecture', value(snapshot.architecture)],
+      ['Total Parameters', snapshot.total_parameters_b == null ? 'Unknown' : snapshot.total_parameters_b + ' B'],
+      ['Active Parameters', snapshot.active_parameters_b == null ? 'Unknown' : snapshot.active_parameters_b + ' B'],
+      ['Context Window', value(snapshot.context_window_tokens)],
+      ['License', value(snapshot.license)],
+      ['Modalities', join(snapshot.modalities) || 'Unknown'],
+      ['Release Date', value(snapshot.release_date)],
+      ['Official Model', modelUrl],
+      ['Evidence', evidence(snapshot.evidence_ids)]
+    ]));
+  }
+
+  // 4. Benchmark Scorecard
+  {
+    const s = section('4. Benchmark Scorecard');
+    const benchmarks = arr(data.benchmark_scorecard);
+    if (!benchmarks.length) {
+      s.appendChild(el('p', 'No sufficiently reliable benchmark comparisons found.', 'empty'));
+    } else {
+      benchmarks.forEach(b => {
+        const c = card(value(b.benchmark) + ' — ' + value(b.category));
+        c.style.marginBottom = '12px';
+        c.appendChild(el('div', 'Comparability: ' + value(b.comparability) + (b.notes ? ' · ' + b.notes : ''), 'small'));
+        c.appendChild(table(['Model', 'Score', 'Variant', 'Source Type', 'Evidence'], arr(b.scores).map(sx => [
+          value(sx.model),
+          (sx.score == null ? 'N/A' : sx.score) + (sx.unit ? ' ' + sx.unit : ''),
+          value(sx.variant, ''),
+          value(sx.source_type, ''),
+          value(sx.evidence_id, '')
+        ])));
+        s.appendChild(c);
+      });
+    }
+  }
+
+  // 5. Local Deployment & Efficiency
+  {
+    const s = section('5. Local Deployment & Efficiency');
+    const models = arr(data.deployment_efficiency?.models);
+    s.appendChild(table(
+      ['Model', 'Total B', 'Active B', 'Min Memory GB', 'Recommended GB', 'Quantization', 'Runtimes', 'Air-Gap', 'Notes', 'Evidence'],
+      models.map(m => [
+        value(m.model),
+        m.total_parameters_b ?? '?',
+        m.active_parameters_b ?? '?',
+        m.minimum_memory_gb ?? '?',
+        m.recommended_memory_gb ?? '?',
+        join(m.quantization_options),
+        join(m.supported_runtimes),
+        value(m.air_gap_ready),
+        [m.memory_notes, m.air_gap_notes].filter(Boolean).join(' '),
+        evidence(m.evidence_ids)
+      ])
+    ));
+  }
+
+  // 6. Capability Matrix
+  {
+    const s = section('6. Capability Matrix');
+    const rows = [];
+    arr(data.capability_matrix).forEach(cap => {
+      arr(cap.models).forEach(m => rows.push([
+        value(cap.capability), value(m.model), value(m.status), value(m.notes, ''), evidence(m.evidence_ids)
+      ]));
+    });
+    s.appendChild(table(['Capability', 'Model', 'Status', 'Notes', 'Evidence'], rows));
+  }
+
+  // 7. Competitor Deep Dives
+  {
+    const s = section('7. Competitor Deep Dives');
+    const g = el('div', null, 'grid');
+    arr(data.competitor_deep_dives).forEach(cmp => {
+      const c = card(value(cmp.competitor) + ' — Threat: ' + value(cmp.threat_level));
+
+      c.appendChild(el('strong', 'Where they beat the product'));
+      c.appendChild(list(cmp.where_they_beat_product, x => textEvidenceItem(x), 'No supported advantage identified.'));
+
+      c.appendChild(el('strong', 'Where the product beats them'));
+      c.appendChild(list(cmp.where_product_beats_them, x => textEvidenceItem(x), 'No supported advantage identified.'));
+
+      c.appendChild(el('strong', 'Recent Moves'));
+      c.appendChild(list(cmp.recent_moves, x => {
+        const li = el('li');
+        li.appendChild(document.createTextNode(value(x.text, 'Insufficient evidence')));
+        if (x.date) li.appendChild(document.createTextNode(' (' + x.date + ')'));
+        li.appendChild(document.createTextNode(' '));
+        li.appendChild(el('span', '[' + evidence(x.evidence_ids) + ']', 'small'));
+        return li;
+      }, 'No recent move identified.'));
+
+      c.appendChild(el('strong', 'Implication'));
+      c.appendChild(el('p', value(cmp.implication, 'Insufficient evidence')));
+      g.appendChild(c);
+    });
+    s.appendChild(g);
+  }
+
+  // 8. Ecosystem & Adoption
+  {
+    const s = section('8. Ecosystem & Adoption');
+    s.appendChild(table(
+      ['Model', 'HF Downloads', 'Runtime Support', 'Quantization Ecosystem', 'Community Signals', 'Evidence'],
+      arr(data.ecosystem_adoption).map(e => [
+        value(e.model),
+        (e.huggingface_downloads == null ? 'N/A' : e.huggingface_downloads) + (e.huggingface_downloads_period ? ' / ' + e.huggingface_downloads_period : ''),
+        join(e.runtime_support),
+        value(e.quantization_ecosystem),
+        join(e.community_signals, '; ') + (e.notes ? ' — ' + e.notes : ''),
+        evidence(e.evidence_ids)
+      ])
+    ));
+  }
+
+  // 9. Strategic Actions
+  {
+    const s = section('9. Strategic Actions');
+    const actions = [...arr(data.strategic_actions)].sort((a, b) => (a.priority ?? 999) - (b.priority ?? 999));
+    s.appendChild(table(
+      ['Priority', 'Category', 'Action', 'Rationale', 'Evidence'],
+      actions.map(a => [a.priority ?? '', value(a.category), value(a.action), value(a.rationale), evidence(a.evidence_ids)])
+    ));
+  }
+
+  // 10. Evidence
+  {
+    const s = section('10. Evidence');
+    const rows = arr(data.evidence).map(e => {
+      const source = el('div');
+      source.appendChild(safeLink(e.url, e.source_title || e.url || 'Source'));
+      source.appendChild(el('br'));
+      source.appendChild(el('span', value(e.publisher, ''), 'small'));
+
+      const date = el('div');
+      date.appendChild(document.createTextNode(value(e.published_date, 'N/A')));
+      date.appendChild(el('br'));
+      date.appendChild(el('span', 'Accessed ' + value(e.accessed_date, 'N/A'), 'small'));
+
+      return [value(e.id), value(e.claim), source, date, value(e.source_type), value(e.confidence), value(e.quote_or_data, '')];
+    });
+    s.appendChild(table(['ID', 'Claim / Data', 'Source', 'Date', 'Type', 'Confidence', 'Supporting Data'], rows));
+  }
+
+  // Coverage Details
+  {
+    const s = section('Coverage Details');
+    s.appendChild(table(
+      ['Topic', 'Status', 'Notes'],
+      arr(coverage.topics).map(t => [value(t.topic), value(t.status), value(t.notes, '')])
+    ));
+  }
+})();
+</script>
+
+</body>
+</html>
