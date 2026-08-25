@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ meta.product }} — Competitive Intelligence Dashboard</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: Arial, sans-serif; margin: 0; padding: 28px; line-height: 1.45; color: #222; }
+  header { border-bottom: 2px solid #222; margin-bottom: 22px; padding-bottom: 12px; }
+  h1 { margin: 0 0 5px; font-size: 26px; }
+  h2 { margin-top: 30px; border-bottom: 1px solid #bbb; padding-bottom: 5px; font-size: 19px; }
+  h3 { font-size: 15px; margin: 12px 0 6px; }
+  .meta { font-size: 12px; color: #666; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+  .card { border: 1px solid #ccc; border-radius: 6px; padding: 12px; }
+  .headline { font-size: 18px; font-weight: 700; margin-bottom: 12px; }
+  .badge { display: inline-block; border: 1px solid #999; border-radius: 999px; padding: 2px 8px; font-size: 11px; margin-right: 5px; }
+  .status-sufficient { border-color: #287a3d; color: #287a3d; }
+  .status-thin { border-color: #a33; color: #a33; }
+  table { width: 100%; border-collapse: collapse; margin: 10px 0 18px; font-size: 12px; }
+  th, td { border: 1px solid #d7d7d7; padding: 7px 8px; text-align: left; vertical-align: top; }
+  th { background: #f2f2f2; }
+  ul { margin: 6px 0; padding-left: 20px; }
+  .small { font-size: 11px; color: #666; }
+  .priority { font-weight: 700; }
+  .evidence-id { font-family: monospace; font-size: 11px; }
+  .empty { color: #999; font-style: italic; }
+  @media print { body { padding: 12mm; } .card { break-inside: avoid; } }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>{{ meta.product }} — Competitive Intelligence</h1>
+  <div class="meta">
+    Provider: {{ meta.provider }} · Run: {{ meta.run_date }} · Window: {{ meta.research_window }}
+  </div>
+  <div style="margin-top:8px;">
+    <span class="badge status-{{ coverage.overall }}">Coverage: {{ coverage.overall }}</span>
+    <span class="badge">Perspective: {{ meta.perspective }}</span>
+    <span class="badge">Change state: {{ changes.status }}</span>
+  </div>
+</header>
+
+<section>
+  <h2>1. Competitive Position</h2>
+  <div class="headline">{{ executive_position.headline or "Insufficient evidence" }}</div>
+  <div class="grid">
+    <div class="card">
+      <h3>Overall Position</h3>
+      <p>{{ executive_position.overall_position }}</p>
+    </div>
+    <div class="card">
+      <h3>Strongest Competitor</h3>
+      <p><strong>{{ executive_position.strongest_competitor.name or "Unknown" }}</strong></p>
+      <p>{{ executive_position.strongest_competitor.why or "Insufficient evidence" }}</p>
+      <div class="small">{{ executive_position.strongest_competitor.evidence_ids | join(", ") }}</div>
+    </div>
+    <div class="card">
+      <h3>Biggest Threat</h3>
+      <p>{{ executive_position.biggest_threat.text or "Insufficient evidence" }}</p>
+      <div class="small">{{ executive_position.biggest_threat.evidence_ids | join(", ") }}</div>
+    </div>
+  </div>
+
+  <div class="grid" style="margin-top:12px;">
+    <div class="card">
+      <h3>Top Strengths</h3>
+      <ul>
+      {% for item in executive_position.top_strengths %}
+        <li>{{ item.text }} <span class="small">[{{ item.evidence_ids | join(", ") }}]</span></li>
+      {% else %}
+        <li class="empty">No supported strengths found.</li>
+      {% endfor %}
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Top Weaknesses</h3>
+      <ul>
+      {% for item in executive_position.top_weaknesses %}
+        <li>{{ item.text }} <span class="small">[{{ item.evidence_ids | join(", ") }}]</span></li>
+      {% else %}
+        <li class="empty">No supported weaknesses found.</li>
+      {% endfor %}
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>2. What Changed</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>New</h3>
+      <ul>
+      {% for item in changes.new %}
+        <li><strong>{{ item.entity }}</strong>: {{ item.change }}{% if item.date %} ({{ item.date }}){% endif %} <span class="small">[{{ item.evidence_ids | join(", ") }}]</span></li>
+      {% else %}
+        <li class="empty">None identified.</li>
+      {% endfor %}
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Changed</h3>
+      <ul>
+      {% for item in changes.changed %}
+        <li><strong>{{ item.entity }}</strong>: {{ item.change }}{% if item.date %} ({{ item.date }}){% endif %} <span class="small">[{{ item.evidence_ids | join(", ") }}]</span></li>
+      {% else %}
+        <li class="empty">None identified.</li>
+      {% endfor %}
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Removed</h3>
+      <ul>
+      {% for item in changes.removed %}
+        <li><strong>{{ item.entity }}</strong>: {{ item.change }}{% if item.date %} ({{ item.date }}){% endif %} <span class="small">[{{ item.evidence_ids | join(", ") }}]</span></li>
+      {% else %}
+        <li class="empty">None identified.</li>
+      {% endfor %}
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>3. Product Snapshot</h2>
+  <table>
+    <tbody>
+      <tr><th>Architecture</th><td>{{ product_snapshot.architecture or "Unknown" }}</td></tr>
+      <tr><th>Total Parameters</th><td>{{ product_snapshot.total_parameters_b if product_snapshot.total_parameters_b is not none else "Unknown" }} B</td></tr>
+      <tr><th>Active Parameters</th><td>{{ product_snapshot.active_parameters_b if product_snapshot.active_parameters_b is not none else "Unknown" }} B</td></tr>
+      <tr><th>Context Window</th><td>{{ product_snapshot.context_window_tokens if product_snapshot.context_window_tokens is not none else "Unknown" }}</td></tr>
+      <tr><th>License</th><td>{{ product_snapshot.license or "Unknown" }}</td></tr>
+      <tr><th>Modalities</th><td>{{ product_snapshot.modalities | join(", ") }}</td></tr>
+      <tr><th>Release Date</th><td>{{ product_snapshot.release_date or "Unknown" }}</td></tr>
+      <tr><th>Official Model</th><td>{% if product_snapshot.official_model_url %}<a href="{{ product_snapshot.official_model_url }}">{{ product_snapshot.official_model_url }}</a>{% else %}Unknown{% endif %}</td></tr>
+      <tr><th>Evidence</th><td>{{ product_snapshot.evidence_ids | join(", ") }}</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>4. Benchmark Scorecard</h2>
+  {% for b in benchmark_scorecard %}
+  <div class="card" style="margin-bottom:12px;">
+    <h3>{{ b.benchmark }} — {{ b.category }}</h3>
+    <div class="small">Comparability: {{ b.comparability }}{% if b.notes %} · {{ b.notes }}{% endif %}</div>
+    <table>
+      <thead>
+        <tr><th>Model</th><th>Score</th><th>Variant</th><th>Source Type</th><th>Evidence</th></tr>
+      </thead>
+      <tbody>
+      {% for s in b.scores %}
+        <tr>
+          <td>{{ s.model }}</td>
+          <td>{{ s.score if s.score is not none else "N/A" }} {{ s.unit or "" }}</td>
+          <td>{{ s.variant or "" }}</td>
+          <td>{{ s.source_type }}</td>
+          <td class="evidence-id">{{ s.evidence_id }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    <p class="empty">No sufficiently reliable benchmark comparisons found.</p>
+  {% endfor %}
+</section>
+
+<section>
+  <h2>5. Local Deployment & Efficiency</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Model</th><th>Total B</th><th>Active B</th><th>Min Memory GB</th><th>Recommended GB</th>
+        <th>Quantization</th><th>Runtimes</th><th>Air-Gap</th><th>Notes</th><th>Evidence</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for m in deployment_efficiency.models %}
+      <tr>
+        <td>{{ m.model }}</td>
+        <td>{{ m.total_parameters_b if m.total_parameters_b is not none else "?" }}</td>
+        <td>{{ m.active_parameters_b if m.active_parameters_b is not none else "?" }}</td>
+        <td>{{ m.minimum_memory_gb if m.minimum_memory_gb is not none else "?" }}</td>
+        <td>{{ m.recommended_memory_gb if m.recommended_memory_gb is not none else "?" }}</td>
+        <td>{{ m.quantization_options | join(", ") }}</td>
+        <td>{{ m.supported_runtimes | join(", ") }}</td>
+        <td>{{ m.air_gap_ready }}</td>
+        <td>{{ m.memory_notes or "" }} {{ m.air_gap_notes or "" }}</td>
+        <td class="evidence-id">{{ m.evidence_ids | join(", ") }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>6. Capability Matrix</h2>
+  <table>
+    <thead>
+      <tr><th>Capability</th><th>Model</th><th>Status</th><th>Notes</th><th>Evidence</th></tr>
+    </thead>
+    <tbody>
+    {% for cap in capability_matrix %}
+      {% for m in cap.models %}
+      <tr>
+        <td>{{ cap.capability }}</td>
+        <td>{{ m.model }}</td>
+        <td>{{ m.status }}</td>
+        <td>{{ m.notes or "" }}</td>
+        <td class="evidence-id">{{ m.evidence_ids | join(", ") }}</td>
+      </tr>
+      {% endfor %}
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>7. Competitor Deep Dives</h2>
+  <div class="grid">
+  {% for c in competitor_deep_dives %}
+    <div class="card">
+      <h3>{{ c.competitor }} — Threat: {{ c.threat_level }}</h3>
+      <strong>Where they beat Qwen</strong>
+      <ul>
+      {% for x in c.where_they_beat_qwen %}
+        <li>{{ x.text }} <span class="small">[{{ x.evidence_ids | join(", ") }}]</span></li>
+      {% else %}<li class="empty">No supported advantage identified.</li>{% endfor %}
+      </ul>
+
+      <strong>Where Qwen beats them</strong>
+      <ul>
+      {% for x in c.where_qwen_beats_them %}
+        <li>{{ x.text }} <span class="small">[{{ x.evidence_ids | join(", ") }}]</span></li>
+      {% else %}<li class="empty">No supported advantage identified.</li>{% endfor %}
+      </ul>
+
+      <strong>Recent Moves</strong>
+      <ul>
+      {% for x in c.recent_moves %}
+        <li>{{ x.text }}{% if x.date %} ({{ x.date }}){% endif %} <span class="small">[{{ x.evidence_ids | join(", ") }}]</span></li>
+      {% else %}<li class="empty">No recent move identified.</li>{% endfor %}
+      </ul>
+
+      <strong>Implication</strong>
+      <p>{{ c.implication or "Insufficient evidence" }}</p>
+    </div>
+  {% endfor %}
+  </div>
+</section>
+
+<section>
+  <h2>8. Ecosystem & Adoption</h2>
+  <table>
+    <thead>
+      <tr><th>Model</th><th>HF Downloads</th><th>Runtime Support</th><th>Quantization Ecosystem</th><th>Community Signals</th><th>Evidence</th></tr>
+    </thead>
+    <tbody>
+    {% for e in ecosystem_adoption %}
+      <tr>
+        <td>{{ e.model }}</td>
+        <td>{{ e.huggingface_downloads if e.huggingface_downloads is not none else "N/A" }}{% if e.huggingface_downloads_period %} / {{ e.huggingface_downloads_period }}{% endif %}</td>
+        <td>{{ e.runtime_support | join(", ") }}</td>
+        <td>{{ e.quantization_ecosystem }}</td>
+        <td>{{ e.community_signals | join("; ") }}{% if e.notes %}<br><span class="small">{{ e.notes }}</span>{% endif %}</td>
+        <td class="evidence-id">{{ e.evidence_ids | join(", ") }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>9. Strategic Actions</h2>
+  <table>
+    <thead><tr><th>Priority</th><th>Category</th><th>Action</th><th>Rationale</th><th>Evidence</th></tr></thead>
+    <tbody>
+    {% for a in strategic_actions | sort(attribute="priority") %}
+      <tr>
+        <td class="priority">{{ a.priority }}</td>
+        <td>{{ a.category }}</td>
+        <td>{{ a.action }}</td>
+        <td>{{ a.rationale }}</td>
+        <td class="evidence-id">{{ a.evidence_ids | join(", ") }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>10. Evidence</h2>
+  <table>
+    <thead>
+      <tr><th>ID</th><th>Claim / Data</th><th>Source</th><th>Date</th><th>Type</th><th>Confidence</th><th>Supporting Data</th></tr>
+    </thead>
+    <tbody>
+    {% for e in evidence %}
+      <tr>
+        <td class="evidence-id">{{ e.id }}</td>
+        <td>{{ e.claim }}</td>
+        <td><a href="{{ e.url }}">{{ e.source_title }}</a><br><span class="small">{{ e.publisher }}</span></td>
+        <td>{{ e.published_date or "N/A" }}<br><span class="small">Accessed {{ e.accessed_date }}</span></td>
+        <td>{{ e.source_type }}</td>
+        <td>{{ e.confidence }}</td>
+        <td>{{ e.quote_or_data }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>Coverage Details</h2>
+  <table>
+    <thead><tr><th>Topic</th><th>Status</th><th>Notes</th></tr></thead>
+    <tbody>
+    {% for t in coverage.topics %}
+      <tr><td>{{ t.topic }}</td><td>{{ t.status }}</td><td>{{ t.notes or "" }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+</body>
+</html>
