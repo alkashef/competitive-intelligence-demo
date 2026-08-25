@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{{ meta.product }} — Competitive Intelligence Dashboard</title>
+<title>Competitive Intelligence Dashboard</title>
 <style>
   * { box-sizing: border-box; }
   body { font-family: Arial, sans-serif; margin: 0; padding: 28px; line-height: 1.45; color: #222; }
@@ -11,6 +11,7 @@
   h1 { margin: 0 0 5px; font-size: 26px; }
   h2 { margin-top: 30px; border-bottom: 1px solid #bbb; padding-bottom: 5px; font-size: 19px; }
   h3 { font-size: 15px; margin: 12px 0 6px; }
+  p { margin: 6px 0; }
   .meta { font-size: 12px; color: #666; }
   .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
   .card { border: 1px solid #ccc; border-radius: 6px; padding: 12px; }
@@ -26,305 +27,375 @@
   .priority { font-weight: 700; }
   .evidence-id { font-family: monospace; font-size: 11px; }
   .empty { color: #999; font-style: italic; }
+  .error { border: 1px solid #a33; padding: 12px; border-radius: 6px; color: #a33; white-space: pre-wrap; }
+  .scroll { overflow-x: auto; }
   @media print { body { padding: 12mm; } .card { break-inside: avoid; } }
 </style>
 </head>
 <body>
 
-<header>
-  <h1>{{ meta.product }} — Competitive Intelligence</h1>
-  <div class="meta">
-    Provider: {{ meta.provider }} · Run: {{ meta.run_date }} · Window: {{ meta.research_window }}
-  </div>
-  <div style="margin-top:8px;">
-    <span class="badge status-{{ coverage.overall }}">Coverage: {{ coverage.overall }}</span>
-    <span class="badge">Perspective: {{ meta.perspective }}</span>
-    <span class="badge">Change state: {{ changes.status }}</span>
-  </div>
-</header>
+<div id="app"></div>
 
-<section>
-  <h2>1. Competitive Position</h2>
-  <div class="headline">{{ executive_position.headline or "Insufficient evidence" }}</div>
-  <div class="grid">
-    <div class="card">
-      <h3>Overall Position</h3>
-      <p>{{ executive_position.overall_position }}</p>
-    </div>
-    <div class="card">
-      <h3>Strongest Competitor</h3>
-      <p><strong>{{ executive_position.strongest_competitor.name or "Unknown" }}</strong></p>
-      <p>{{ executive_position.strongest_competitor.why or "Insufficient evidence" }}</p>
-      <div class="small">{{ executive_position.strongest_competitor.evidence_ids | join(", ") }}</div>
-    </div>
-    <div class="card">
-      <h3>Biggest Threat</h3>
-      <p>{{ executive_position.biggest_threat.text or "Insufficient evidence" }}</p>
-      <div class="small">{{ executive_position.biggest_threat.evidence_ids | join(", ") }}</div>
-    </div>
-  </div>
+<!-- n8n replaces the data token in the application/json script below with JSON.stringify(researchData).
+     Escape '<' as \\u003c before replacement so model/web text cannot terminate this script tag. -->
+<script id="dashboard-data" type="application/json">__DASHBOARD_DATA__</script>
 
-  <div class="grid" style="margin-top:12px;">
-    <div class="card">
-      <h3>Top Strengths</h3>
-      <ul>
-      {% for item in executive_position.top_strengths %}
-        <li>{{ item.text }} <span class="small">[{{ item.evidence_ids | join(", ") }}]</span></li>
-      {% else %}
-        <li class="empty">No supported strengths found.</li>
-      {% endfor %}
-      </ul>
-    </div>
-    <div class="card">
-      <h3>Top Weaknesses</h3>
-      <ul>
-      {% for item in executive_position.top_weaknesses %}
-        <li>{{ item.text }} <span class="small">[{{ item.evidence_ids | join(", ") }}]</span></li>
-      {% else %}
-        <li class="empty">No supported weaknesses found.</li>
-      {% endfor %}
-      </ul>
-    </div>
-  </div>
-</section>
+<script>
+(() => {
+  'use strict';
 
-<section>
-  <h2>2. What Changed</h2>
-  <div class="grid">
-    <div class="card">
-      <h3>New</h3>
-      <ul>
-      {% for item in changes.new %}
-        <li><strong>{{ item.entity }}</strong>: {{ item.change }}{% if item.date %} ({{ item.date }}){% endif %} <span class="small">[{{ item.evidence_ids | join(", ") }}]</span></li>
-      {% else %}
-        <li class="empty">None identified.</li>
-      {% endfor %}
-      </ul>
-    </div>
-    <div class="card">
-      <h3>Changed</h3>
-      <ul>
-      {% for item in changes.changed %}
-        <li><strong>{{ item.entity }}</strong>: {{ item.change }}{% if item.date %} ({{ item.date }}){% endif %} <span class="small">[{{ item.evidence_ids | join(", ") }}]</span></li>
-      {% else %}
-        <li class="empty">None identified.</li>
-      {% endfor %}
-      </ul>
-    </div>
-    <div class="card">
-      <h3>Removed</h3>
-      <ul>
-      {% for item in changes.removed %}
-        <li><strong>{{ item.entity }}</strong>: {{ item.change }}{% if item.date %} ({{ item.date }}){% endif %} <span class="small">[{{ item.evidence_ids | join(", ") }}]</span></li>
-      {% else %}
-        <li class="empty">None identified.</li>
-      {% endfor %}
-      </ul>
-    </div>
-  </div>
-</section>
+  const app = document.getElementById('app');
+  const raw = document.getElementById('dashboard-data').textContent.trim();
 
-<section>
-  <h2>3. Product Snapshot</h2>
-  <table>
-    <tbody>
-      <tr><th>Architecture</th><td>{{ product_snapshot.architecture or "Unknown" }}</td></tr>
-      <tr><th>Total Parameters</th><td>{{ product_snapshot.total_parameters_b if product_snapshot.total_parameters_b is not none else "Unknown" }} B</td></tr>
-      <tr><th>Active Parameters</th><td>{{ product_snapshot.active_parameters_b if product_snapshot.active_parameters_b is not none else "Unknown" }} B</td></tr>
-      <tr><th>Context Window</th><td>{{ product_snapshot.context_window_tokens if product_snapshot.context_window_tokens is not none else "Unknown" }}</td></tr>
-      <tr><th>License</th><td>{{ product_snapshot.license or "Unknown" }}</td></tr>
-      <tr><th>Modalities</th><td>{{ product_snapshot.modalities | join(", ") }}</td></tr>
-      <tr><th>Release Date</th><td>{{ product_snapshot.release_date or "Unknown" }}</td></tr>
-      <tr><th>Official Model</th><td>{% if product_snapshot.official_model_url %}<a href="{{ product_snapshot.official_model_url }}">{{ product_snapshot.official_model_url }}</a>{% else %}Unknown{% endif %}</td></tr>
-      <tr><th>Evidence</th><td>{{ product_snapshot.evidence_ids | join(", ") }}</td></tr>
-    </tbody>
-  </table>
-</section>
+  if (raw === ('__DASHBOARD_' + 'DATA__')) {
+    app.textContent = 'Dashboard template loaded. Waiting for n8n to inject research JSON.';
+    app.className = 'empty';
+    return;
+  }
 
-<section>
-  <h2>4. Benchmark Scorecard</h2>
-  {% for b in benchmark_scorecard %}
-  <div class="card" style="margin-bottom:12px;">
-    <h3>{{ b.benchmark }} — {{ b.category }}</h3>
-    <div class="small">Comparability: {{ b.comparability }}{% if b.notes %} · {{ b.notes }}{% endif %}</div>
-    <table>
-      <thead>
-        <tr><th>Model</th><th>Score</th><th>Variant</th><th>Source Type</th><th>Evidence</th></tr>
-      </thead>
-      <tbody>
-      {% for s in b.scores %}
-        <tr>
-          <td>{{ s.model }}</td>
-          <td>{{ s.score if s.score is not none else "N/A" }} {{ s.unit or "" }}</td>
-          <td>{{ s.variant or "" }}</td>
-          <td>{{ s.source_type }}</td>
-          <td class="evidence-id">{{ s.evidence_id }}</td>
-        </tr>
-      {% endfor %}
-      </tbody>
-    </table>
-  </div>
-  {% else %}
-    <p class="empty">No sufficiently reliable benchmark comparisons found.</p>
-  {% endfor %}
-</section>
+  let data;
+  try {
+    data = JSON.parse(raw);
+  } catch (error) {
+    const box = document.createElement('div');
+    box.className = 'error';
+    box.textContent = 'Dashboard data is not valid JSON: ' + error.message;
+    app.appendChild(box);
+    return;
+  }
 
-<section>
-  <h2>5. Local Deployment & Efficiency</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Model</th><th>Total B</th><th>Active B</th><th>Min Memory GB</th><th>Recommended GB</th>
-        <th>Quantization</th><th>Runtimes</th><th>Air-Gap</th><th>Notes</th><th>Evidence</th>
-      </tr>
-    </thead>
-    <tbody>
-    {% for m in deployment_efficiency.models %}
-      <tr>
-        <td>{{ m.model }}</td>
-        <td>{{ m.total_parameters_b if m.total_parameters_b is not none else "?" }}</td>
-        <td>{{ m.active_parameters_b if m.active_parameters_b is not none else "?" }}</td>
-        <td>{{ m.minimum_memory_gb if m.minimum_memory_gb is not none else "?" }}</td>
-        <td>{{ m.recommended_memory_gb if m.recommended_memory_gb is not none else "?" }}</td>
-        <td>{{ m.quantization_options | join(", ") }}</td>
-        <td>{{ m.supported_runtimes | join(", ") }}</td>
-        <td>{{ m.air_gap_ready }}</td>
-        <td>{{ m.memory_notes or "" }} {{ m.air_gap_notes or "" }}</td>
-        <td class="evidence-id">{{ m.evidence_ids | join(", ") }}</td>
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table>
-</section>
+  const arr = value => Array.isArray(value) ? value : [];
+  const value = (v, fallback = 'Unknown') => (v === null || v === undefined || v === '') ? fallback : String(v);
+  const join = (v, sep = ', ') => arr(v).filter(x => x !== null && x !== undefined && x !== '').join(sep);
+  const evidence = ids => join(ids) || 'No evidence ID';
 
-<section>
-  <h2>6. Capability Matrix</h2>
-  <table>
-    <thead>
-      <tr><th>Capability</th><th>Model</th><th>Status</th><th>Notes</th><th>Evidence</th></tr>
-    </thead>
-    <tbody>
-    {% for cap in capability_matrix %}
-      {% for m in cap.models %}
-      <tr>
-        <td>{{ cap.capability }}</td>
-        <td>{{ m.model }}</td>
-        <td>{{ m.status }}</td>
-        <td>{{ m.notes or "" }}</td>
-        <td class="evidence-id">{{ m.evidence_ids | join(", ") }}</td>
-      </tr>
-      {% endfor %}
-    {% endfor %}
-    </tbody>
-  </table>
-</section>
+  function el(tag, text, className) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined && text !== null) node.textContent = String(text);
+    return node;
+  }
 
-<section>
-  <h2>7. Competitor Deep Dives</h2>
-  <div class="grid">
-  {% for c in competitor_deep_dives %}
-    <div class="card">
-      <h3>{{ c.competitor }} — Threat: {{ c.threat_level }}</h3>
-      <strong>Where they beat Qwen</strong>
-      <ul>
-      {% for x in c.where_they_beat_qwen %}
-        <li>{{ x.text }} <span class="small">[{{ x.evidence_ids | join(", ") }}]</span></li>
-      {% else %}<li class="empty">No supported advantage identified.</li>{% endfor %}
-      </ul>
+  function append(parent, ...children) {
+    children.filter(Boolean).forEach(child => parent.appendChild(child));
+    return parent;
+  }
 
-      <strong>Where Qwen beats them</strong>
-      <ul>
-      {% for x in c.where_qwen_beats_them %}
-        <li>{{ x.text }} <span class="small">[{{ x.evidence_ids | join(", ") }}]</span></li>
-      {% else %}<li class="empty">No supported advantage identified.</li>{% endfor %}
-      </ul>
+  function section(title) {
+    const s = el('section');
+    s.appendChild(el('h2', title));
+    app.appendChild(s);
+    return s;
+  }
 
-      <strong>Recent Moves</strong>
-      <ul>
-      {% for x in c.recent_moves %}
-        <li>{{ x.text }}{% if x.date %} ({{ x.date }}){% endif %} <span class="small">[{{ x.evidence_ids | join(", ") }}]</span></li>
-      {% else %}<li class="empty">No recent move identified.</li>{% endfor %}
-      </ul>
+  function card(title) {
+    const c = el('div', null, 'card');
+    if (title) c.appendChild(el('h3', title));
+    return c;
+  }
 
-      <strong>Implication</strong>
-      <p>{{ c.implication or "Insufficient evidence" }}</p>
-    </div>
-  {% endfor %}
-  </div>
-</section>
+  function badge(text, extraClass = '') {
+    return el('span', text, ('badge ' + extraClass).trim());
+  }
 
-<section>
-  <h2>8. Ecosystem & Adoption</h2>
-  <table>
-    <thead>
-      <tr><th>Model</th><th>HF Downloads</th><th>Runtime Support</th><th>Quantization Ecosystem</th><th>Community Signals</th><th>Evidence</th></tr>
-    </thead>
-    <tbody>
-    {% for e in ecosystem_adoption %}
-      <tr>
-        <td>{{ e.model }}</td>
-        <td>{{ e.huggingface_downloads if e.huggingface_downloads is not none else "N/A" }}{% if e.huggingface_downloads_period %} / {{ e.huggingface_downloads_period }}{% endif %}</td>
-        <td>{{ e.runtime_support | join(", ") }}</td>
-        <td>{{ e.quantization_ecosystem }}</td>
-        <td>{{ e.community_signals | join("; ") }}{% if e.notes %}<br><span class="small">{{ e.notes }}</span>{% endif %}</td>
-        <td class="evidence-id">{{ e.evidence_ids | join(", ") }}</td>
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table>
-</section>
+  function list(items, renderer, emptyText = 'None identified.') {
+    const ul = el('ul');
+    const rows = arr(items);
+    if (!rows.length) {
+      ul.appendChild(el('li', emptyText, 'empty'));
+      return ul;
+    }
+    rows.forEach(item => ul.appendChild(renderer(item)));
+    return ul;
+  }
 
-<section>
-  <h2>9. Strategic Actions</h2>
-  <table>
-    <thead><tr><th>Priority</th><th>Category</th><th>Action</th><th>Rationale</th><th>Evidence</th></tr></thead>
-    <tbody>
-    {% for a in strategic_actions | sort(attribute="priority") %}
-      <tr>
-        <td class="priority">{{ a.priority }}</td>
-        <td>{{ a.category }}</td>
-        <td>{{ a.action }}</td>
-        <td>{{ a.rationale }}</td>
-        <td class="evidence-id">{{ a.evidence_ids | join(", ") }}</td>
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table>
-</section>
+  function textEvidenceItem(item, prefix = '') {
+    const li = el('li');
+    if (prefix) li.appendChild(el('strong', prefix));
+    li.appendChild(document.createTextNode(value(item?.text, 'Insufficient evidence')));
+    li.appendChild(document.createTextNode(' '));
+    li.appendChild(el('span', '[' + evidence(item?.evidence_ids) + ']', 'small'));
+    return li;
+  }
 
-<section>
-  <h2>10. Evidence</h2>
-  <table>
-    <thead>
-      <tr><th>ID</th><th>Claim / Data</th><th>Source</th><th>Date</th><th>Type</th><th>Confidence</th><th>Supporting Data</th></tr>
-    </thead>
-    <tbody>
-    {% for e in evidence %}
-      <tr>
-        <td class="evidence-id">{{ e.id }}</td>
-        <td>{{ e.claim }}</td>
-        <td><a href="{{ e.url }}">{{ e.source_title }}</a><br><span class="small">{{ e.publisher }}</span></td>
-        <td>{{ e.published_date or "N/A" }}<br><span class="small">Accessed {{ e.accessed_date }}</span></td>
-        <td>{{ e.source_type }}</td>
-        <td>{{ e.confidence }}</td>
-        <td>{{ e.quote_or_data }}</td>
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table>
-</section>
+  function changeItem(item) {
+    const li = el('li');
+    li.appendChild(el('strong', value(item?.entity)));
+    li.appendChild(document.createTextNode(': ' + value(item?.change, 'Insufficient evidence')));
+    if (item?.date) li.appendChild(document.createTextNode(' (' + item.date + ')'));
+    li.appendChild(document.createTextNode(' '));
+    li.appendChild(el('span', '[' + evidence(item?.evidence_ids) + ']', 'small'));
+    return li;
+  }
 
-<section>
-  <h2>Coverage Details</h2>
-  <table>
-    <thead><tr><th>Topic</th><th>Status</th><th>Notes</th></tr></thead>
-    <tbody>
-    {% for t in coverage.topics %}
-      <tr><td>{{ t.topic }}</td><td>{{ t.status }}</td><td>{{ t.notes or "" }}</td></tr>
-    {% endfor %}
-    </tbody>
-  </table>
-</section>
+  function table(headers, rows) {
+    const wrap = el('div', null, 'scroll');
+    const t = el('table');
+    const thead = el('thead');
+    const hr = el('tr');
+    headers.forEach(h => hr.appendChild(el('th', h)));
+    thead.appendChild(hr);
+    t.appendChild(thead);
+
+    const tbody = el('tbody');
+    rows.forEach(row => {
+      const tr = el('tr');
+      row.forEach(cell => {
+        const td = el('td');
+        if (cell instanceof Node) td.appendChild(cell);
+        else td.textContent = value(cell, '');
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+    t.appendChild(tbody);
+    wrap.appendChild(t);
+    return wrap;
+  }
+
+  function safeLink(url, label) {
+    const rawUrl = value(url, '');
+    try {
+      const parsed = new URL(rawUrl);
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return el('span', value(label, rawUrl));
+      const a = el('a', value(label, rawUrl));
+      a.href = parsed.href;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      return a;
+    } catch {
+      return el('span', value(label, rawUrl || 'Unknown'));
+    }
+  }
+
+  const meta = data.meta || {};
+  const coverage = data.coverage || {};
+  const executive = data.executive_position || {};
+  const changes = data.changes || {};
+  const snapshot = data.product_snapshot || {};
+
+  document.title = value(meta.product, 'Product') + ' — Competitive Intelligence Dashboard';
+
+  // Header
+  const header = el('header');
+  header.appendChild(el('h1', value(meta.product, 'Product') + ' — Competitive Intelligence'));
+  header.appendChild(el('div',
+    'Provider: ' + value(meta.provider) + ' · Run: ' + value(meta.run_date) + ' · Window: ' + value(meta.research_window),
+    'meta'
+  ));
+  const badges = el('div');
+  badges.style.marginTop = '8px';
+  badges.appendChild(badge('Coverage: ' + value(coverage.overall), coverage.overall ? 'status-' + coverage.overall : ''));
+  badges.appendChild(badge('Perspective: ' + value(meta.perspective)));
+  badges.appendChild(badge('Change state: ' + value(changes.status)));
+  header.appendChild(badges);
+  app.appendChild(header);
+
+  // 1. Competitive Position
+  {
+    const s = section('1. Competitive Position');
+    s.appendChild(el('div', value(executive.headline, 'Insufficient evidence'), 'headline'));
+
+    const g1 = el('div', null, 'grid');
+    const overall = card('Overall Position');
+    overall.appendChild(el('p', value(executive.overall_position)));
+
+    const sc = executive.strongest_competitor || {};
+    const strongest = card('Strongest Competitor');
+    const pName = el('p');
+    pName.appendChild(el('strong', value(sc.name)));
+    strongest.appendChild(pName);
+    strongest.appendChild(el('p', value(sc.why, 'Insufficient evidence')));
+    strongest.appendChild(el('div', evidence(sc.evidence_ids), 'small'));
+
+    const bt = executive.biggest_threat || {};
+    const threat = card('Biggest Threat');
+    threat.appendChild(el('p', value(bt.text, 'Insufficient evidence')));
+    threat.appendChild(el('div', evidence(bt.evidence_ids), 'small'));
+
+    append(g1, overall, strongest, threat);
+    s.appendChild(g1);
+
+    const g2 = el('div', null, 'grid');
+    g2.style.marginTop = '12px';
+    const strengths = card('Top Strengths');
+    strengths.appendChild(list(executive.top_strengths, x => textEvidenceItem(x), 'No supported strengths found.'));
+    const weaknesses = card('Top Weaknesses');
+    weaknesses.appendChild(list(executive.top_weaknesses, x => textEvidenceItem(x), 'No supported weaknesses found.'));
+    append(g2, strengths, weaknesses);
+    s.appendChild(g2);
+  }
+
+  // 2. What Changed
+  {
+    const s = section('2. What Changed');
+    const g = el('div', null, 'grid');
+    [['New', changes.new], ['Changed', changes.changed], ['Removed', changes.removed]].forEach(([title, items]) => {
+      const c = card(title);
+      c.appendChild(list(items, changeItem));
+      g.appendChild(c);
+    });
+    s.appendChild(g);
+  }
+
+  // 3. Product Snapshot
+  {
+    const s = section('3. Product Snapshot');
+    const modelUrl = safeLink(snapshot.official_model_url, snapshot.official_model_url || 'Unknown');
+    s.appendChild(table(['Field', 'Value'], [
+      ['Architecture', value(snapshot.architecture)],
+      ['Total Parameters', snapshot.total_parameters_b == null ? 'Unknown' : snapshot.total_parameters_b + ' B'],
+      ['Active Parameters', snapshot.active_parameters_b == null ? 'Unknown' : snapshot.active_parameters_b + ' B'],
+      ['Context Window', value(snapshot.context_window_tokens)],
+      ['License', value(snapshot.license)],
+      ['Modalities', join(snapshot.modalities) || 'Unknown'],
+      ['Release Date', value(snapshot.release_date)],
+      ['Official Model', modelUrl],
+      ['Evidence', evidence(snapshot.evidence_ids)]
+    ]));
+  }
+
+  // 4. Benchmark Scorecard
+  {
+    const s = section('4. Benchmark Scorecard');
+    const benchmarks = arr(data.benchmark_scorecard);
+    if (!benchmarks.length) {
+      s.appendChild(el('p', 'No sufficiently reliable benchmark comparisons found.', 'empty'));
+    } else {
+      benchmarks.forEach(b => {
+        const c = card(value(b.benchmark) + ' — ' + value(b.category));
+        c.style.marginBottom = '12px';
+        c.appendChild(el('div', 'Comparability: ' + value(b.comparability) + (b.notes ? ' · ' + b.notes : ''), 'small'));
+        c.appendChild(table(['Model', 'Score', 'Variant', 'Source Type', 'Evidence'], arr(b.scores).map(sx => [
+          value(sx.model),
+          (sx.score == null ? 'N/A' : sx.score) + (sx.unit ? ' ' + sx.unit : ''),
+          value(sx.variant, ''),
+          value(sx.source_type, ''),
+          value(sx.evidence_id, '')
+        ])));
+        s.appendChild(c);
+      });
+    }
+  }
+
+  // 5. Local Deployment & Efficiency
+  {
+    const s = section('5. Local Deployment & Efficiency');
+    const models = arr(data.deployment_efficiency?.models);
+    s.appendChild(table(
+      ['Model', 'Total B', 'Active B', 'Min Memory GB', 'Recommended GB', 'Quantization', 'Runtimes', 'Air-Gap', 'Notes', 'Evidence'],
+      models.map(m => [
+        value(m.model),
+        m.total_parameters_b ?? '?',
+        m.active_parameters_b ?? '?',
+        m.minimum_memory_gb ?? '?',
+        m.recommended_memory_gb ?? '?',
+        join(m.quantization_options),
+        join(m.supported_runtimes),
+        value(m.air_gap_ready),
+        [m.memory_notes, m.air_gap_notes].filter(Boolean).join(' '),
+        evidence(m.evidence_ids)
+      ])
+    ));
+  }
+
+  // 6. Capability Matrix
+  {
+    const s = section('6. Capability Matrix');
+    const rows = [];
+    arr(data.capability_matrix).forEach(cap => {
+      arr(cap.models).forEach(m => rows.push([
+        value(cap.capability), value(m.model), value(m.status), value(m.notes, ''), evidence(m.evidence_ids)
+      ]));
+    });
+    s.appendChild(table(['Capability', 'Model', 'Status', 'Notes', 'Evidence'], rows));
+  }
+
+  // 7. Competitor Deep Dives
+  {
+    const s = section('7. Competitor Deep Dives');
+    const g = el('div', null, 'grid');
+    arr(data.competitor_deep_dives).forEach(cmp => {
+      const c = card(value(cmp.competitor) + ' — Threat: ' + value(cmp.threat_level));
+
+      c.appendChild(el('strong', 'Where they beat the product'));
+      c.appendChild(list(cmp.where_they_beat_product, x => textEvidenceItem(x), 'No supported advantage identified.'));
+
+      c.appendChild(el('strong', 'Where the product beats them'));
+      c.appendChild(list(cmp.where_product_beats_them, x => textEvidenceItem(x), 'No supported advantage identified.'));
+
+      c.appendChild(el('strong', 'Recent Moves'));
+      c.appendChild(list(cmp.recent_moves, x => {
+        const li = el('li');
+        li.appendChild(document.createTextNode(value(x.text, 'Insufficient evidence')));
+        if (x.date) li.appendChild(document.createTextNode(' (' + x.date + ')'));
+        li.appendChild(document.createTextNode(' '));
+        li.appendChild(el('span', '[' + evidence(x.evidence_ids) + ']', 'small'));
+        return li;
+      }, 'No recent move identified.'));
+
+      c.appendChild(el('strong', 'Implication'));
+      c.appendChild(el('p', value(cmp.implication, 'Insufficient evidence')));
+      g.appendChild(c);
+    });
+    s.appendChild(g);
+  }
+
+  // 8. Ecosystem & Adoption
+  {
+    const s = section('8. Ecosystem & Adoption');
+    s.appendChild(table(
+      ['Model', 'HF Downloads', 'Runtime Support', 'Quantization Ecosystem', 'Community Signals', 'Evidence'],
+      arr(data.ecosystem_adoption).map(e => [
+        value(e.model),
+        (e.huggingface_downloads == null ? 'N/A' : e.huggingface_downloads) + (e.huggingface_downloads_period ? ' / ' + e.huggingface_downloads_period : ''),
+        join(e.runtime_support),
+        value(e.quantization_ecosystem),
+        join(e.community_signals, '; ') + (e.notes ? ' — ' + e.notes : ''),
+        evidence(e.evidence_ids)
+      ])
+    ));
+  }
+
+  // 9. Strategic Actions
+  {
+    const s = section('9. Strategic Actions');
+    const actions = [...arr(data.strategic_actions)].sort((a, b) => (a.priority ?? 999) - (b.priority ?? 999));
+    s.appendChild(table(
+      ['Priority', 'Category', 'Action', 'Rationale', 'Evidence'],
+      actions.map(a => [a.priority ?? '', value(a.category), value(a.action), value(a.rationale), evidence(a.evidence_ids)])
+    ));
+  }
+
+  // 10. Evidence
+  {
+    const s = section('10. Evidence');
+    const rows = arr(data.evidence).map(e => {
+      const source = el('div');
+      source.appendChild(safeLink(e.url, e.source_title || e.url || 'Source'));
+      source.appendChild(el('br'));
+      source.appendChild(el('span', value(e.publisher, ''), 'small'));
+
+      const date = el('div');
+      date.appendChild(document.createTextNode(value(e.published_date, 'N/A')));
+      date.appendChild(el('br'));
+      date.appendChild(el('span', 'Accessed ' + value(e.accessed_date, 'N/A'), 'small'));
+
+      return [value(e.id), value(e.claim), source, date, value(e.source_type), value(e.confidence), value(e.quote_or_data, '')];
+    });
+    s.appendChild(table(['ID', 'Claim / Data', 'Source', 'Date', 'Type', 'Confidence', 'Supporting Data'], rows));
+  }
+
+  // Coverage Details
+  {
+    const s = section('Coverage Details');
+    s.appendChild(table(
+      ['Topic', 'Status', 'Notes'],
+      arr(coverage.topics).map(t => [value(t.topic), value(t.status), value(t.notes, '')])
+    ));
+  }
+})();
+</script>
 
 </body>
 </html>
