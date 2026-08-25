@@ -1,0 +1,714 @@
+{
+  "name": "competitive-intelligence-demo",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "daysInterval": 7,
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -768,
+        -16
+      ],
+      "id": "d1f09fbc-c3fb-41fe-a68d-052e0927f324",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://raw.githubusercontent.com/alkashef/competitive-intelligence-demo/main/product_competitor.config",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text",
+              "outputPropertyName": "config_text"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -544,
+        -112
+      ],
+      "id": "7f0e1ad4-4fd9-46e0-a242-438d75f1d8d7",
+      "name": "Fetch Config"
+    },
+    {
+      "parameters": {
+        "url": "https://raw.githubusercontent.com/alkashef/competitive-intelligence-demo/main/research_prompt_template.md",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text",
+              "outputPropertyName": "prompt_template"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -544,
+        80
+      ],
+      "id": "dd4ec7b4-2cb5-498d-ba26-8507236111ad",
+      "name": "Fetch Prompt Template"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -320,
+        -16
+      ],
+      "id": "a7af2180-4220-4156-9f9e-1e0a2661c9d3",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const configText = $json.config_text;\nlet prompt = $json.prompt_template;\n\n// Parse the simple .config file\nconst config = {};\n\nfor (const rawLine of configText.split('\\n')) {\n  const line = rawLine.trim();\n\n  if (!line || line.startsWith('[') || line.startsWith('#') || line.startsWith(';')) {\n    continue;\n  }\n\n  const separator = line.indexOf('=');\n  if (separator === -1) continue;\n\n  const key = line.slice(0, separator).trim().toLowerCase();\n  const value = line.slice(separator + 1).trim();\n\n  config[key] = value;\n}\n\n// Map config values to prompt placeholders\nconst replacements = {\n  OWNER: config.owner,\n  PRODUCT: config.product,\n  CATEGORY: config.category,\n  DEPLOYMENT: config.deployment,\n  COMPETITORS: config.competitors,\n};\n\nfor (const [key, value] of Object.entries(replacements)) {\n  prompt = prompt.split(`{{${key}}}`).join(value || '');\n}\n\n// First run: no previous dashboard JSON\nprompt = prompt.split('{{PREVIOUS_RUN_JSON}}').join('null');\n\nreturn {\n  json: {\n    research_prompt: prompt\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -96,
+        -16
+      ],
+      "id": "01b0376e-6a17-4a98-958f-1cde3d43ec9c",
+      "name": "Build Research Prompt",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.research_prompt }}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        128,
+        -16
+      ],
+      "id": "117c6a27-5984-46ad-9910-9622475340ab",
+      "name": "Research"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.6-sol",
+          "mode": "list",
+          "cachedResultName": "gpt-5.6-sol"
+        },
+        "builtInTools": {
+          "webSearch": {
+            "searchContextSize": "high"
+          }
+        },
+        "options": {
+          "reasoningEffort": "high"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        208,
+        208
+      ],
+      "id": "765041e2-a8c0-42b8-aa97-149ef409a7f3",
+      "name": "gpt-5.6-sol-high-web-search",
+      "credentials": {
+        "openAiApi": {
+          "id": "2tZGlvDtKQS6Ihy2",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const raw = $json.text;\n\nif (!raw) {\n  throw new Error('No text field found in model output.');\n}\n\nconst cleaned = raw\n  .trim()\n  .replace(/^```json\\s*/i, '')\n  .replace(/^```\\s*/i, '')\n  .replace(/\\s*```$/, '');\n\nlet parsed;\n\ntry {\n  parsed = JSON.parse(cleaned);\n} catch (error) {\n  throw new Error(\n    `Model output is not valid JSON: ${error.message}`\n  );\n}\n\nreturn {\n  json: parsed\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        -16
+      ],
+      "id": "73fd8740-7931-45a9-8898-51bc5036a8b7",
+      "name": "Parse Research JSON"
+    },
+    {
+      "parameters": {
+        "url": "https://raw.githubusercontent.com/alkashef/competitive-intelligence-demo/main/dashboard_template.html",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text",
+              "outputPropertyName": "dashboard_template"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        704,
+        -16
+      ],
+      "id": "3f89c48f-71ae-4cb2-bcee-47394bcaa7b2",
+      "name": "Fetch Dashboard Template"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const researchData = $('Parse Research JSON').first().json;\nconst dashboardTemplate = $json.dashboard_template;\n\nif (!dashboardTemplate) {\n  throw new Error('Dashboard template is missing.');\n}\n\nif (!dashboardTemplate.includes('__DASHBOARD_DATA__')) {\n  throw new Error('Dashboard placeholder not found.');\n}\n\nconst safeJson = JSON.stringify(researchData)\n  .replace(/</g, '\\\\u003c');\n\nconst draftHtml = dashboardTemplate.replace(\n  '__DASHBOARD_DATA__',\n  safeJson\n);\n\nreturn {\n  json: {\n    draft_html: draftHtml\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        928,
+        -16
+      ],
+      "id": "bb1abed1-3758-4573-a6d0-007a250f3363",
+      "name": "Render Draft Dashboard"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const draftHtml = $('Render Draft Dashboard').first().json.draft_html;\n\nif (!draftHtml) {\n  throw new Error('draft_html is missing.');\n}\n\nconst body = {\n  message: 'Update review dashboard',\n  content: Buffer.from(draftHtml, 'utf8').toString('base64')\n};\n\n// On later runs GitHub returns a SHA.\n// GitHub requires it when overwriting the file.\nif ($json.sha) {\n  body.sha = $json.sha;\n}\n\nreturn {\n  json: {\n    github_body: body\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1376,
+        -16
+      ],
+      "id": "4b9c1791-8d59-40e4-8630-5a7e8f484810",
+      "name": "Prepare Review Commit"
+    },
+    {
+      "parameters": {
+        "url": "https://api.github.com/repos/alkashef/competitive-intelligence-demo/contents/review.html",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2272,
+        -112
+      ],
+      "id": "6196caef-9eb6-4a90-99e6-3e03ba466bfb",
+      "name": "Fetch Approved Review"
+    },
+    {
+      "parameters": {
+        "url": "https://api.github.com/repos/alkashef/competitive-intelligence-demo/contents/index.html",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2496,
+        -112
+      ],
+      "id": "dab4cbc4-f900-4fc9-82b8-2ef4f2876d95",
+      "name": "Get Current Index"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const approvedReview = $('Fetch Approved Review').first().json;\nconst currentIndex = $json;\n\nif (!approvedReview.content) {\n  throw new Error('Approved review.html content is missing.');\n}\n\nif (!currentIndex.sha) {\n  throw new Error('Current index.html SHA is missing.');\n}\n\nreturn {\n  json: {\n    github_body: {\n      message: 'Publish approved dashboard',\n      content: approvedReview.content.replace(/\\s/g, ''),\n      sha: currentIndex.sha\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2720,
+        -112
+      ],
+      "id": "1655a15c-689e-49ad-b5f9-390cf131ca4e",
+      "name": "Prepare Publish Commit"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "https://api.github.com/repos/alkashef/competitive-intelligence-demo/contents/index.html",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.github_body }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2944,
+        -112
+      ],
+      "id": "1ed25aa9-fdab-487a-9cef-24b8f9e39d3d",
+      "name": "Publish Approved Dashboard",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "9JLdczqo4kWvtxoC",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "https://api.github.com/repos/alkashef/competitive-intelligence-demo/contents/review.html",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.github_body }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1600,
+        -16
+      ],
+      "id": "e0446df3-6cec-4132-a36e-08b85379f4a1",
+      "name": "Publish for Review",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "9JLdczqo4kWvtxoC",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resume": "form",
+        "formTitle": "Review Competitive Intelligence Dashboard",
+        "formDescription": "Review the dashboard here:\nhttps://alkashef.github.io/competitive-intelligence-demo/review.html",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Decision",
+              "fieldType": "dropdown",
+              "defaultValue": "Approve",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Approve"
+                  },
+                  {
+                    "option": "Reject"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1824,
+        -16
+      ],
+      "id": "950dadff-190d-484d-8b73-0557a3c1ce64",
+      "name": "Human Review",
+      "webhookId": "9338a399-5a16-471f-b811-45de7879447c"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f54ca9f4-9c1c-4396-9284-1696c38bdc36",
+              "leftValue": "={{ $json.Decision }}",
+              "rightValue": "Approve",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2048,
+        -16
+      ],
+      "id": "6a106407-4c86-4135-ac33-f3778755a6d4",
+      "name": "Approved?"
+    },
+    {
+      "parameters": {
+        "errorMessage": "Report did not pass human review!"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        2272,
+        80
+      ],
+      "id": "db2ee95f-ff4c-406b-8601-b2d471583a64",
+      "name": "Stop and Error"
+    },
+    {
+      "parameters": {
+        "url": "https://api.github.com/repos/alkashef/competitive-intelligence-demo/contents/review.html",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1152,
+        -16
+      ],
+      "id": "33f98b64-24f4-4572-a136-704c15edeecb",
+      "name": "Get Review File"
+    },
+    {
+      "parameters": {
+        "content": "Separate configuration from workflow logic.",
+        "height": 80
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -464,
+        -176
+      ],
+      "typeVersion": 1,
+      "id": "4266202a-46de-423b-b320-70c4112e257c",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Config",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch Prompt Template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Config": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Prompt Template": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Build Research Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Research Prompt": {
+      "main": [
+        [
+          {
+            "node": "Research",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Research": {
+      "main": [
+        [
+          {
+            "node": "Parse Research JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gpt-5.6-sol-high-web-search": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Research",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Research JSON": {
+      "main": [
+        [
+          {
+            "node": "Fetch Dashboard Template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Dashboard Template": {
+      "main": [
+        [
+          {
+            "node": "Render Draft Dashboard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Render Draft Dashboard": {
+      "main": [
+        [
+          {
+            "node": "Get Review File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Review Commit": {
+      "main": [
+        [
+          {
+            "node": "Publish for Review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Approved Review": {
+      "main": [
+        [
+          {
+            "node": "Get Current Index",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Current Index": {
+      "main": [
+        [
+          {
+            "node": "Prepare Publish Commit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Publish Commit": {
+      "main": [
+        [
+          {
+            "node": "Publish Approved Dashboard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publish for Review": {
+      "main": [
+        [
+          {
+            "node": "Human Review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Human Review": {
+      "main": [
+        [
+          {
+            "node": "Approved?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Approved?": {
+      "main": [
+        [
+          {
+            "node": "Fetch Approved Review",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop and Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Review File": {
+      "main": [
+        [
+          {
+            "node": "Prepare Review Commit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "dd5bb694-31da-4903-b90c-75f09ef20e28",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "259271ffa05d8419c20e9c3ed08deccb11fc1bb3335f3d354de45c1c2a95c16f"
+  },
+  "nodeGroups": [
+    {
+      "id": "3caa60ce-8016-47f8-90de-0598ecf734a9",
+      "name": "AI Research",
+      "nodeIds": [
+        "117c6a27-5984-46ad-9910-9622475340ab",
+        "765041e2-a8c0-42b8-aa97-149ef409a7f3",
+        "73fd8740-7931-45a9-8898-51bc5036a8b7"
+      ]
+    },
+    {
+      "id": "6f123ec8-5d8d-4ee3-8ce6-a6726d2991bc",
+      "nodeIds": [
+        "3f89c48f-71ae-4cb2-bcee-47394bcaa7b2",
+        "bb1abed1-3758-4573-a6d0-007a250f3363",
+        "4b9c1791-8d59-40e4-8630-5a7e8f484810",
+        "e0446df3-6cec-4132-a36e-08b85379f4a1",
+        "33f98b64-24f4-4572-a136-704c15edeecb"
+      ],
+      "name": "Build Review Dashboard"
+    },
+    {
+      "id": "22dbe57c-2d4f-4033-9647-ad430c19d412",
+      "nodeIds": [
+        "6196caef-9eb6-4a90-99e6-3e03ba466bfb",
+        "dab4cbc4-f900-4fc9-82b8-2ef4f2876d95",
+        "1655a15c-689e-49ad-b5f9-390cf131ca4e",
+        "1ed25aa9-fdab-487a-9cef-24b8f9e39d3d"
+      ],
+      "name": "Human Review and Publish"
+    }
+  ],
+  "id": "flFzeq8Txd4T8EFh",
+  "tags": []
+}
